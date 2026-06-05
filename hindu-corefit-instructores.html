@@ -638,7 +638,7 @@ async function cargarDatos(manual = false) {
     '<div class="state-msg"><div class="loader"></div>Sincronizando con la planilla…</div>';
 
   try {
-    const url = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(SHEET_CSV);
+    const url = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/';
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();

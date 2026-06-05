@@ -554,7 +554,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQUXQFWTrPG85NTJVFwarjBFwp7JnB0GB_8Cn4LEegO7tq-qt3bnDAYGMm0bCfm7oJxdt5G87aOxPZT/pub?gid=1486039774&single=true&output=csv';
+  const WORKER_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/';
 
   function parseCSV(text) {
     const lines = text.trim().split('\n');
@@ -580,14 +580,6 @@
     return result.map(s => s.trim().replace(/^"|"$/g,''));
   }
 
-
-      window[cbName] = function(data) { cleanup(); resolve(data); };
-      script.onerror = function() { cleanup(); reject(new Error('Error cargando el script')); };
-      script.src = url + '?callback=' + cbName;
-      document.head.appendChild(script);
-    });
-  }
-
   async function handleLogin(e) {
     e.preventDefault();
     const u = document.getElementById('usuario').value.trim();
@@ -605,11 +597,13 @@
 
     const btn = document.getElementById('btnLogin');
     btn.classList.add('loading');
-    showToast('Conectando con la planilla…');
+    showToast('Conectando…');
 
     try {
-      const rows = await fetchJSONP(API_URL);
-      if (!Array.isArray(rows)) { throw new Error('Respuesta inválida de la API'); }
+      const resp = await fetch(WORKER_URL);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const text = await resp.text();
+      const rows = parseCSV(text);
 
       let encontrado = null;
       for (const row of rows) {
@@ -685,7 +679,7 @@
   }
 
   function showToast(msg, isError = false) {
-    let t = document.getElementById('toast');
+    const t = document.getElementById('toast');
     if (!t) return;
     t.textContent = msg;
     t.style.background  = isError ? '#2c1e1e' : '#1e2c1e';
