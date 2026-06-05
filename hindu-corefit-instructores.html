@@ -592,6 +592,33 @@ function espClass(esp) {
   return 'esp-def';
 }
 
+
+function fetchJSONP(url) {
+  return new Promise(function(resolve, reject) {
+    var cbName = 'cb_' + Math.random().toString(36).slice(2);
+    var script = document.createElement('script');
+    var timer = setTimeout(function() {
+      cleanup();
+      reject(new Error('Timeout - Apps Script no respondió'));
+    }, 12000);
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    window[cbName] = function(data) {
+      cleanup();
+      resolve(data);
+    };
+    script.onerror = function() {
+      cleanup();
+      reject(new Error('Error cargando el script'));
+    };
+    script.src = url + '?callback=' + cbName;
+    document.head.appendChild(script);
+  });
+}
+
 // ── Cargar datos ──
 async function cargarDatos(manual = false) {
   const btn = document.getElementById('btnSync');
@@ -600,9 +627,7 @@ async function cargarDatos(manual = false) {
     '<div class="state-msg"><div class="loader"></div>Sincronizando con la planilla…</div>';
 
   try {
-    const resp = await fetch(API_URL);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
+    const data = await fetchJSONP(API_URL);
     if (!Array.isArray(data)) throw new Error('Respuesta inválida');
     todos = data;
     actualizarStats();
