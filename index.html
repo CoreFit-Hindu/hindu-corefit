@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hindú — CoreFit</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #3a9e3f;
+    --green-dark: #2d7a31;
+    --green-glow: rgba(58,158,63,0.35);
+    --red: #cc2222;
+    --red-glow: rgba(204,34,34,0.4);
+    --bg: #0d1117;
+    --bg2: #141a22;
+    --surface: rgba(255,255,255,0.06);
+    --surface-hover: rgba(255,255,255,0.1);
+    --border: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --text-muted: #7a8494;
+    --input-h: 54px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Atmospheric background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 100%, rgba(20,40,20,0.7) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 35% at 75% 20%, rgba(100,10,10,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 25% 15%, rgba(10,50,20,0.2) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Subtle grid texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 2rem 1.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LOGO ── */
+  .logo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+
+  .shield {
+    width: 64px;
+    height: 74px;
+    flex-shrink: 0;
+  }
+
+  .runner-wrap {
+    position: relative;
+    width: 70px;
+    height: 70px;
+  }
+
+  .runner-glow {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--red-glow) 0%, transparent 70%);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.15); }
+  }
+
+  .runner-icon {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+  }
+
+  .brand-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .brand-name .dash {
+    color: var(--text-muted);
+    font-weight: 500;
+    margin: 0 6px;
+  }
+
+  .brand-name .corefit {
+    color: #c8cdd8;
+    font-weight: 600;
+  }
+
+  /* ── FORM ── */
+  .form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 16px;
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  .input-wrap:focus-within .input-icon {
+    color: var(--green);
+  }
+
+  .input-wrap input {
+    width: 100%;
+    height: var(--input-h);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 16px 0 48px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrap input::placeholder { color: var(--text-muted); }
+
+  .input-wrap input:focus {
+    border-color: var(--green);
+    background: var(--surface-hover);
+    box-shadow: 0 0 0 3px var(--green-glow);
+  }
+
+  .toggle-pass {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+
+  .toggle-pass:hover { color: var(--text); }
+
+  /* error state */
+  .input-wrap.error input {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(204,34,34,0.2);
+  }
+
+  .error-msg {
+    font-size: 0.78rem;
+    color: #e57373;
+    margin-top: -6px;
+    padding-left: 4px;
+    min-height: 18px;
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* ── BUTTON ── */
+  .btn-login {
+    margin-top: 6px;
+    width: 100%;
+    height: 54px;
+    background: var(--green);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-login:hover  { background: #44b84a; }
+  .btn-login:active { transform: scale(0.98); background: var(--green-dark); }
+
+  .btn-login::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* loading spinner inside btn */
+  .btn-login .spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn-login.loading .btn-text { display: none; }
+  .btn-login.loading .spinner  { display: block; }
+
+  /* ── FORGOT ── */
+  .forgot {
+    margin-top: 1.25rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+
+  .forgot:hover { color: var(--text); }
+
+  /* ── MODAL (recuperar contraseña) ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: #1a2130;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    transform: translateY(20px);
+    transition: transform 0.25s;
+  }
+
+  .modal-backdrop.open .modal { transform: translateY(0); }
+
+  .modal h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .modal p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .modal label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .modal input {
+    width: 100%;
+    height: 46px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .modal input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-glow);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 0.5rem;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    height: 44px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .btn-cancel:hover { background: var(--surface); color: var(--text); }
+
+  .btn-send {
+    flex: 2;
+    height: 44px;
+    background: var(--green);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-send:hover { background: #44b84a; }
+
+  .modal-success {
+    text-align: center;
+    padding: 1rem 0;
+    display: none;
+  }
+
+  .modal-success svg { margin-bottom: 12px; }
+  .modal-success h3 { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+  .modal-success p  { font-size: 0.85rem; color: var(--text-muted); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e2c1e;
+    border: 1px solid var(--green);
+    color: #a5d6a7;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <!-- Shield SVG -->
+    <svg class="shield" viewBox="0 0 64 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M32 2L4 14v24c0 16 12 28 28 34 16-6 28-18 28-34V14L32 2z" fill="#2d6e32"/>
+      <path d="M32 2L4 14v24c0 16 12 28 28 34 16-6 28-18 28-34V14L32 2z" fill="url(#shg)" opacity="0.4"/>
+      <defs>
+        <linearGradient id="shg" x1="32" y1="2" x2="32" y2="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#fff" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#000" stop-opacity="0.2"/>
+        </linearGradient>
+      </defs>
+      <!-- HINDU text -->
+      <text x="32" y="30" text-anchor="middle" font-family="Rajdhani,sans-serif" font-weight="700" font-size="11" fill="white" letter-spacing="1">HINDU</text>
+      <!-- stripes -->
+      <rect x="14" y="35" width="36" height="3" fill="white" opacity="0.9"/>
+      <rect x="14" y="41" width="36" height="3" fill="white" opacity="0.6"/>
+    </svg>
+
+    <!-- Runner SVG -->
+    <div class="runner-wrap">
+      <div class="runner-glow"></div>
+      <svg class="runner-icon" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- runner figure stylized -->
+        <circle cx="44" cy="14" r="6" fill="#cc2222"/>
+        <!-- body -->
+        <path d="M44 20 L36 38 L26 50" stroke="#cc2222" stroke-width="4" stroke-linecap="round"/>
+        <!-- arms -->
+        <path d="M40 28 L28 24" stroke="#cc2222" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M42 33 L52 30" stroke="#cc2222" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- legs -->
+        <path d="M36 38 L44 54" stroke="#cc2222" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- speed lines -->
+        <path d="M16 32 L28 32" stroke="#cc2222" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        <path d="M12 38 L24 38" stroke="#cc2222" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+        <path d="M18 44 L28 44" stroke="#cc2222" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="brand-name">
+    HINDÚ<span class="dash"> — </span><span class="corefit">CoreFit</span>
+  </div>
+
+  <!-- Form -->
+  <form class="form" id="loginForm" onsubmit="handleLogin(event)">
+
+    <div class="input-wrap" id="wrap-user">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      <input type="text" id="usuario" placeholder="DNI" autocomplete="username" inputmode="numeric" />
+    </div>
+    <div class="error-msg" id="err-user">Ingresá tu DNI</div>
+
+    <div class="input-wrap" id="wrap-pass">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" />
+      <button type="button" class="toggle-pass" onclick="togglePass()" aria-label="Mostrar/ocultar contraseña">
+        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <div class="error-msg" id="err-pass">Ingresá tu contraseña</div>
+
+    <button type="submit" class="btn-login" id="btnLogin">
+      <span class="btn-text">INGRESAR</span>
+      <div class="spinner"></div>
+    </button>
+
+  </form>
+
+  <button class="forgot" onclick="openModal()">¿Olvidaste tu contraseña?</button>
+
+</div>
+
+<!-- Modal recuperar contraseña -->
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-label="Recuperar contraseña">
+  <div class="modal">
+    <div id="modal-form-content">
+      <h2>Recuperar contraseña</h2>
+      <p>Ingresá tu DNI y el email asociado a tu cuenta. Te enviaremos un formulario para restablecer tu contraseña.</p>
+
+      <label for="rec-dni">DNI</label>
+      <input type="text" id="rec-dni" placeholder="Ej: 30123456" maxlength="10" inputmode="numeric" />
+
+      <label for="rec-email">Email</label>
+      <input type="email" id="rec-email" placeholder="tu@email.com" />
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-send" onclick="sendRecovery()">ENVIAR</button>
+      </div>
+    </div>
+
+    <div class="modal-success" id="modal-success">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3a9e3f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <h3>¡Solicitud enviada!</h3>
+      <p>Revisá tu email. En breve recibirás el formulario para crear una nueva contraseña.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Login ──
+  async function handleLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('usuario').value.trim();
+    const p = document.getElementById('password').value;
+    let ok = true;
+
+    const wu = document.getElementById('wrap-user');
+    const wp = document.getElementById('wrap-pass');
+    const eu = document.getElementById('err-user');
+    const ep = document.getElementById('err-pass');
+
+    wu.classList.remove('error'); eu.classList.remove('visible');
+    wp.classList.remove('error'); ep.classList.remove('visible');
+
+    if (!u) { wu.classList.add('error'); eu.classList.add('visible'); ok = false; }
+    if (!p) { wp.classList.add('error'); ep.classList.add('visible'); ok = false; }
+
+    if (!ok) return;
+
+    const btn = document.getElementById('btnLogin');
+    btn.classList.add('loading');
+
+    try {
+      const instructor = await buscarEnSheet(u, p);
+      btn.classList.remove('loading');
+
+      if (instructor) {
+        // Guardar sesión
+        sessionStorage.setItem('hcf_user', JSON.stringify(instructor));
+        showToast('✓ Bienvenido, ' + instructor.nombre.split(' ')[0]);
+        setTimeout(() => {
+          window.location.href = 'hindu-corefit-instructores.html';
+        }, 1000);
+      } else {
+        btn.classList.remove('loading');
+        wu.classList.add('error'); wp.classList.add('error');
+        eu.textContent = 'DNI o contraseña incorrectos';
+        eu.classList.add('visible');
+        showToast('DNI o contraseña incorrectos', true);
+      }
+    } catch(err) {
+      btn.classList.remove('loading');
+      showToast('Error al conectar con la planilla. Intentá de nuevo.', true);
+      console.error(err);
+    }
+  }
+
+  // ── Validación contra Google Sheets ──
+  const API_URL = 'https://script.google.com/macros/s/AKfycbynd3astCNkU_kwt4BOgflllPknkHtfwf3QN-UQpfU9IOd36_1yRvCZ1L98tb7o0oT7/exec';
+
+  function parseLine(line) {
+    const result = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+      else cur += c;
+    }
+    result.push(cur);
+    return result.map(s => s.trim().replace(/^"|"$/g, ''));
+  }
+
+  function getCol(header, row, ...keys) {
+    for (const k of keys) {
+      const idx = header.findIndex(h => h.toLowerCase().includes(k.toLowerCase()));
+      if (idx !== -1 && row[idx]) return row[idx].trim();
+    }
+    return '';
+  }
+
+  async function buscarEnSheet(dni, password) {
+    const resp = await fetch(API_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const rows = await resp.json();
+    for (const row of rows) {
+      const rowDni  = (row['DNI'] || '').trim();
+      const rowPass = (row['Contraseña inicial'] || '').trim();
+      const nombre  = (row['Nombre y Apellido'] || '').trim();
+      const email   = (row['Correo electronico (e-mail)'] || '').trim();
+      const esp     = (row['Especialidada/Diciplina'] || '').trim();
+      const dniNorm  = rowDni.replace(/\s/g,'').toLowerCase();
+      const passNorm = rowPass.replace(/\s/g,'').toLowerCase();
+      const uDni     = dni.replace(/\s/g,'').toLowerCase();
+      const uPass    = password.replace(/\s/g,'').toLowerCase();
+      console.log('Fila: DNI=' + rowDni + ' Pass=' + rowPass);
+      if (dniNorm === uDni && passNorm === uPass) {
+        return { nombre, dni: rowDni, email, especialidad: esp };
+      }
+    }
+    return null;
+  }
+    if (lines.length < 2) return null;
+
+    const header = parseLine(lines[0]);
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = parseLine(lines[i]);
+      const rowDni  = getCol(header, row, 'DNI');
+      const rowPass = getCol(header, row, 'contraseña inicial', 'Contrase', 'Password', 'Clave');
+      const nombre  = getCol(header, row, 'Nombre');
+      const email   = getCol(header, row, 'email', 'correo');
+      const esp     = getCol(header, row, 'Especialidad', 'Diciplina', 'Disciplina');
+
+      // Comparación normalizada: sin espacios y sin importar mayúsculas
+      const dniNorm  = rowDni.replace(/\s/g,'').toLowerCase();
+      const passNorm = rowPass.replace(/\s/g,'').toLowerCase();
+      const uDni     = dni.replace(/\s/g,'').toLowerCase();
+      const uPass    = password.replace(/\s/g,'').toLowerCase();
+
+      console.log(`Fila ${i}: DNI="${rowDni}" Pass="${rowPass}"`);
+
+      if (dniNorm === uDni && passNorm === uPass) {
+        return { nombre, dni: rowDni, email, especialidad: esp };
+      }
+    }
+    return null;
+  }
+
+  function togglePass() {
+    const input = document.getElementById('password');
+    const icon  = document.getElementById('eye-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+      input.type = 'password';
+      icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+  }
+
+  // ── Modal ──
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    document.getElementById('modal-form-content').style.display = 'block';
+    document.getElementById('modal-success').style.display = 'none';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.getElementById('rec-dni').value = '';
+    document.getElementById('rec-email').value = '';
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  function sendRecovery() {
+    const dni   = document.getElementById('rec-dni').value.trim();
+    const email = document.getElementById('rec-email').value.trim();
+    if (!dni || !email) { showToast('Completá ambos campos', true); return; }
+
+    // Construir URL del Google Form de recuperación
+    // Reemplazar FORM_ID con el ID real del formulario de recuperación
+    const FORM_ID = 'TU_FORM_ID_AQUI';
+    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/viewform?usp=pp_url&entry.DNI_FIELD=${encodeURIComponent(dni)}&entry.EMAIL_FIELD=${encodeURIComponent(email)}`;
+
+    // Por ahora abre el form en nueva pestaña con datos pre-llenados
+    // window.open(formUrl, '_blank');
+
+    // Mostrar confirmación
+    document.getElementById('modal-form-content').style.display = 'none';
+    document.getElementById('modal-success').style.display = 'block';
+
+    setTimeout(closeModal, 3000);
+  }
+
+  // ── Toast ──
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background    = isError ? '#2c1e1e' : '#1e2c1e';
+    t.style.borderColor   = isError ? '#cc2222' : '#3a9e3f';
+    t.style.color         = isError ? '#ef9a9a' : '#a5d6a7';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
