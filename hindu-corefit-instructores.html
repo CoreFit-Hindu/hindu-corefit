@@ -552,102 +552,68 @@ main {
 </div>
 
 <script>
-// ── CONFIG ──
 const API_URL = 'https://script.google.com/macros/s/AKfycbynd3astCNkU_kwt4BOgflllPknkHtfwf3QN-UQpfU9IOd36_1yRvCZ1L98tb7o0oT7/exec';
-
-// Columnas del CSV (según el form — ajustar si cambian)
-// 0: Marca temporal, 1: Nombre y Apellido, 2: DNI, 3: Telefono,
-// 4: Correo electronico, 5: Especialidad/Diciplina, 6: Horarios Disponible, 7: Foto (URL o vacío)
-
 let todos = [];
 
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  const header = parseLine(lines[0]);
-  return lines.slice(1).map(line => {
-    const vals = parseLine(line);
-    const obj = {};
-    header.forEach((h, i) => obj[h.trim()] = (vals[i] || '').trim());
-    return obj;
-  }).filter(r => r['Nombre y Apellido'] || r['Nombre'] || Object.values(r).some(v => v));
-}
+// ── Utilidades ──
+function getNombre(r)   { return String(r['Nombre y Apellido'] || '').trim(); }
+function getDNI(r)      { return String(r['DNI'] || '').trim(); }
+function getTel(r)      { return String(r['Telefono'] || '').trim(); }
+function getEmail(r)    { return String(r['Correo electronico (e-mail)'] || '').trim(); }
+function getEsp(r)      { return String(r['Especialidada/Diciplina'] || '').trim(); }
+function getHorarios(r) { return String(r['Horarios Disponible'] || '').trim(); }
+function getFoto(r)     { return String(r['Sbir una foto'] || '').trim(); }
 
-function parseLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-    else cur += c;
-  }
-  result.push(cur);
-  return result;
-}
-
-function getField(row, ...keys) {
-  for (const k of keys) {
-    const found = Object.keys(row).find(h => h.toLowerCase().includes(k.toLowerCase()));
-    if (found && row[found]) return row[found];
-  }
-  return '';
-}
-
-function espClass(esp) {
-  if (!esp) return 'esp-def';
-  const e = esp.toLowerCase();
-  if (e.includes('instructor') && e.includes('musc')) return 'esp-im';
-  if (e.includes('instructor') && e.includes('func')) return 'esp-if';
-  if (e.includes('auxiliar') && e.includes('musc')) return 'esp-asm';
-  if (e.includes('auxiliar') && e.includes('func')) return 'esp-asf';
-  return 'esp-def';
+function fotoUrl(url) {
+  if (!url) return '';
+  const m = url.match(/[?&]id=([\w-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200';
+  return url;
 }
 
 function iniciales(nombre) {
-  const parts = nombre.trim().split(' ').filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return nombre.slice(0, 2).toUpperCase();
+  const p = nombre.trim().split(' ').filter(Boolean);
+  return p.length >= 2 ? (p[0][0]+p[1][0]).toUpperCase() : nombre.slice(0,2).toUpperCase();
 }
 
-function avColor(i) {
-  return ['av-0','av-1','av-2','av-3','av-4'][i % 5];
-}
+function avColor(i) { return ['av-0','av-1','av-2','av-3','av-4'][i % 5]; }
 
 function parseHorarios(str) {
   if (!str) return [];
   return str.split(',').map(s => s.trim()).filter(Boolean);
 }
 
+function espClass(esp) {
+  const e = (esp||'').toLowerCase();
+  if (e.includes('instructor') && e.includes('musc')) return 'esp-im';
+  if (e.includes('instructor') && e.includes('func')) return 'esp-if';
+  if (e.includes('auxiliar')   && e.includes('musc')) return 'esp-asm';
+  if (e.includes('auxiliar')   && e.includes('func')) return 'esp-asf';
+  return 'esp-def';
+}
+
+// ── Cargar datos ──
 async function cargarDatos(manual = false) {
   const btn = document.getElementById('btnSync');
   btn.classList.add('spinning');
-  document.getElementById('grid').innerHTML = `
-    <div class="state-msg"><div class="loader"></div>Sincronizando con la planilla…</div>`;
+  document.getElementById('grid').innerHTML =
+    '<div class="state-msg"><div class="loader"></div>Sincronizando con la planilla…</div>';
 
   try {
     const resp = await fetch(API_URL);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    todos = await resp.json();
-
+    const data = await resp.json();
+    if (!Array.isArray(data)) throw new Error('Respuesta inválida');
+    todos = data;
     actualizarStats();
     filtrar();
-
     const now = new Date();
     document.getElementById('updateTime').textContent =
       'Actualizado ' + now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
-
     if (manual) mostrarToast('✓ Datos actualizados');
-  } catch (e) {
-    document.getElementById('grid').innerHTML = `
-      <div class="state-msg">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        No se pudo cargar la planilla.<br>
-        <small style="font-size:0.78rem">Verificá que el link de la Sheet esté publicado correctamente.</small>
-      </div>`;
-    console.error(e);
+  } catch(e) {
+    document.getElementById('grid').innerHTML =
+      '<div class="state-msg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Error: ' + e.message + '</div>';
   } finally {
     btn.classList.remove('spinning');
   }
@@ -655,44 +621,20 @@ async function cargarDatos(manual = false) {
 
 function actualizarStats() {
   document.getElementById('st-total').textContent = todos.length;
-  document.getElementById('st-im').textContent =
-    todos.filter(r => getEsp(r).toLowerCase().includes('instructor') && getEsp(r).toLowerCase().includes('musc')).length;
-  document.getElementById('st-if').textContent =
-    todos.filter(r => getEsp(r).toLowerCase().includes('instructor') && getEsp(r).toLowerCase().includes('func')).length;
-  document.getElementById('st-aux').textContent =
-    todos.filter(r => getEsp(r).toLowerCase().includes('auxiliar')).length;
+  document.getElementById('st-im').textContent  = todos.filter(r => getEsp(r).toLowerCase().includes('instructor') && getEsp(r).toLowerCase().includes('musc')).length;
+  document.getElementById('st-if').textContent  = todos.filter(r => getEsp(r).toLowerCase().includes('instructor') && getEsp(r).toLowerCase().includes('func')).length;
+  document.getElementById('st-aux').textContent = todos.filter(r => getEsp(r).toLowerCase().includes('auxiliar')).length;
 }
-
-function getNombre(r)  { return (r['Nombre y Apellido'] || '').toString().trim(); }
-function getDNI(r)     { return (r['DNI'] || '').toString().trim(); }
-function getTel(r)     { return (r['Telefono'] || '').toString().trim(); }
-function getEmail(r)   { return (r['Correo electronico (e-mail)'] || '').toString().trim(); }
-function getEsp(r)     { return (r['Especialidada/Diciplina'] || '').toString().trim(); }
-function getHorarios(r){ return (r['Horarios Disponible'] || '').toString().trim(); }
-function fotoUrl(url) {
-  if (!url) return '';
-  // Convierte drive.google.com/open?id=XXX → thumbnail directo
-  const m = url.match(/[?&]id=([\w-]+)/);
-  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w200`;
-  // Si ya es una URL directa la devuelve tal cual
-  return url;
-}
-
-function getFoto(r)    { return (r['Sbir una foto'] || '').toString().trim(); }
 
 function filtrar() {
   const q      = document.getElementById('search').value.toLowerCase();
   const esp    = document.getElementById('filtroEsp').value.toLowerCase();
   const horFil = document.getElementById('filtroHorario').value;
 
-  let res = todos.filter(r => {
-    const nombre = getNombre(r);
-    const dni    = getDNI(r);
-    const email  = getEmail(r);
-    const espVal = getEsp(r);
-    const hors   = getHorarios(r);
-
-    if (q && !nombre.toLowerCase().includes(q) && !dni.includes(q) && !email.toLowerCase().includes(q)) return false;
+  const res = todos.filter(r => {
+    const nombre = getNombre(r), dni = getDNI(r), email = getEmail(r);
+    const espVal = getEsp(r), hors = getHorarios(r);
+    if (q && !nombre.toLowerCase().includes(q) && !String(dni).includes(q) && !email.toLowerCase().includes(q)) return false;
     if (esp && !espVal.toLowerCase().includes(esp)) return false;
     if (horFil && !hors.toLowerCase().includes(horFil)) return false;
     return true;
@@ -700,106 +642,89 @@ function filtrar() {
 
   document.getElementById('resultCount').textContent =
     res.length + ' instructor' + (res.length !== 1 ? 'es' : '');
-
   renderGrid(res);
 }
 
 function renderGrid(lista) {
   const grid = document.getElementById('grid');
-
-  if (!lista.length && todos.length === 0) return;
-
   if (!lista.length) {
-    grid.innerHTML = `<div class="state-msg">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      No se encontraron instructores con esos filtros.</div>`;
+    grid.innerHTML = '<div class="state-msg">No se encontraron instructores.</div>';
     return;
   }
-
   grid.innerHTML = lista.map((r, i) => {
-    const nombre = getNombre(r);
+    const nombre = getNombre(r) || 'Sin nombre';
     const esp    = getEsp(r);
     const tel    = getTel(r);
     const email  = getEmail(r);
-    const foto   = getFoto(r);
+    const foto   = fotoUrl(getFoto(r));
     const hors   = parseHorarios(getHorarios(r));
-    const ini    = iniciales(nombre || '?');
+    const ini    = iniciales(nombre);
     const idx    = todos.indexOf(r);
-
-    const fotoSrc = fotoUrl(foto);
-    const avatarHtml = fotoSrc
-      ? `<img src="${fotoSrc}" alt="${nombre}" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='${ini}'">`
+    const avatarHtml = foto
+      ? '<img src="' + foto + '" alt="' + nombre + '" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='' + ini + ''">'
       : ini;
-
-    const horPills = hors.slice(0, 4).map(h => {
+    const horPills = hors.slice(0,4).map(h => {
       const am = h.toLowerCase().includes('mañana');
       const pm = h.toLowerCase().includes('tarde');
       const dia = h.replace(/mañana|tarde/gi,'').trim().slice(0,3);
-      return `<span class="horario-pill ${am?'am':pm?'pm':''}">${dia}${am?' AM':pm?' PM':''}</span>`;
-    }).join('') + (hors.length > 4 ? `<span class="horario-pill">+${hors.length-4}</span>` : '');
+      return '<span class="horario-pill ' + (am?'am':pm?'pm':'') + '">' + dia + (am?' AM':pm?' PM':'') + '</span>';
+    }).join('') + (hors.length > 4 ? '<span class="horario-pill">+' + (hors.length-4) + '</span>' : '');
 
-    return `<div class="card" style="animation-delay:${i*0.05}s" onclick="abrirPerfil(${idx})">
-      <div class="card-top">
-        <div class="avatar ${avColor(i)}">${avatarHtml}</div>
-        <div class="card-info">
-          <div class="card-name">${nombre || 'Sin nombre'}</div>
-          <span class="esp-badge ${espClass(esp)}">${esp || 'Sin especialidad'}</span>
-          <div class="card-meta-row">
-            ${email ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>${email}</div>` : ''}
-            ${tel   ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4.36 15 19.4 19.4 0 0 1 1.12 4.18 2 2 0 0 1 3.09 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.72 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.36 1.85.59 2.81.72A2 2 0 0 1 21 16.92z"/></svg>${tel}</div>` : ''}
-          </div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <div class="horarios-wrap">${horPills || '<span style="font-size:0.75rem;color:var(--text3)">Sin horarios</span>'}</div>
-        <button class="btn-perfil" onclick="event.stopPropagation();abrirPerfil(${idx})">Ver perfil →</button>
-      </div>
-    </div>`;
+    return '<div class="card" style="animation-delay:' + (i*0.05) + 's" onclick="abrirPerfil(' + idx + ')">' +
+      '<div class="card-top">' +
+        '<div class="avatar ' + avColor(i) + '">' + avatarHtml + '</div>' +
+        '<div class="card-info">' +
+          '<div class="card-name">' + nombre + '</div>' +
+          '<span class="esp-badge ' + espClass(esp) + '">' + (esp||'Sin especialidad') + '</span>' +
+          '<div class="card-meta-row">' +
+            (email ? '<div class="card-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>' + email + '</div>' : '') +
+            (tel   ? '<div class="card-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4.36 15 19.4 19.4 0 0 1 1.12 4.18 2 2 0 0 1 3.09 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.72 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.36 1.85.59 2.81.72A2 2 0 0 1 21 16.92z"/></svg>' + tel + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-footer">' +
+        '<div class="horarios-wrap">' + (horPills || '<span style="font-size:0.75rem;color:var(--text3)">Sin horarios</span>') + '</div>' +
+        '<button class="btn-perfil" onclick="event.stopPropagation();abrirPerfil(' + idx + ')">Ver perfil →</button>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
 function abrirPerfil(idx) {
-  const r = todos[idx];
+  const r      = todos[idx];
   const nombre = getNombre(r);
   const esp    = getEsp(r);
   const tel    = getTel(r);
   const email  = getEmail(r);
   const dni    = getDNI(r);
-  const foto   = getFoto(r);
+  const foto   = fotoUrl(getFoto(r));
   const hors   = parseHorarios(getHorarios(r));
-  const i      = idx;
   const ini    = iniciales(nombre || '?');
 
-  // Avatar
   const mAv = document.getElementById('m-avatar');
-  mAv.className = `modal-avatar ${avColor(i)}`;
-  const fotoSrc = fotoUrl(foto);
-  mAv.innerHTML = fotoSrc
-    ? `<img src="${fotoSrc}" alt="${nombre}" onerror="this.style.display='none';this.parentElement.textContent='${ini}'">`
+  mAv.className = 'modal-avatar ' + avColor(idx);
+  mAv.innerHTML = foto
+    ? '<img src="' + foto + '" alt="' + nombre + '" onerror="this.style.display='none';this.parentElement.textContent='' + ini + ''">'
     : ini;
 
   document.getElementById('m-nombre').textContent = nombre || 'Sin nombre';
   const mEsp = document.getElementById('m-esp');
   mEsp.textContent = esp || '—';
-  mEsp.className = `esp-badge ${espClass(esp)}`;
+  mEsp.className = 'esp-badge ' + espClass(esp);
   document.getElementById('m-email').textContent = email || '—';
   document.getElementById('m-tel').textContent   = tel   || '—';
   document.getElementById('m-dni').textContent   = 'DNI: ' + (dni || '—');
 
-  // Horarios grid
   const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
-  const horGrid = document.getElementById('m-horarios');
-  horGrid.innerHTML = dias.map(d => {
+  document.getElementById('m-horarios').innerHTML = dias.map(d => {
     const tieneAm = hors.some(h => h.toLowerCase().includes(d.toLowerCase().slice(0,3)) && h.toLowerCase().includes('mañana'));
     const tienePm = hors.some(h => h.toLowerCase().includes(d.toLowerCase().slice(0,3)) && h.toLowerCase().includes('tarde'));
-    return `<div class="dia-cell">
-      <div class="dia-label">${d.slice(0,3)}</div>
-      <div class="dia-pill am" style="${tieneAm?'':'opacity:0.2'}">AM</div>
-      <div style="height:3px"></div>
-      <div class="dia-pill pm" style="${tienePm?'':'opacity:0.2'}">PM</div>
-    </div>`;
+    return '<div class="dia-cell">' +
+      '<div class="dia-label">' + d.slice(0,3) + '</div>' +
+      '<div class="dia-pill am" style="' + (tieneAm?'':'opacity:0.2') + '">AM</div>' +
+      '<div style="height:3px"></div>' +
+      '<div class="dia-pill pm" style="' + (tienePm?'':'opacity:0.2') + '">PM</div>' +
+    '</div>';
   }).join('');
 
   document.getElementById('modalBg').classList.add('open');
@@ -815,7 +740,6 @@ function cerrarModalBtn() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModalBtn(); });
 
-// ── Toast ──
 function mostrarToast(msg) {
   let t = document.getElementById('toast-gl');
   if (!t) {
@@ -829,7 +753,6 @@ function mostrarToast(msg) {
   setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(10px)'; }, 2500);
 }
 
-// ── Init ──
 cargarDatos();
 </script>
 </body>
