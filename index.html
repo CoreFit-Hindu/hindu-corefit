@@ -554,123 +554,65 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── Login ──
+  const API_URL = 'https://script.google.com/macros/s/AKfycbynd3astCNkU_kwt4BOgflllPknkHtfwf3QN-UQpfU9IOd36_1yRvCZ1L98tb7o0oT7/exec';
+
   async function handleLogin(e) {
     e.preventDefault();
     const u = document.getElementById('usuario').value.trim();
-    const p = document.getElementById('password').value;
-    let ok = true;
+    const p = document.getElementById('password').value.trim();
 
     const wu = document.getElementById('wrap-user');
     const wp = document.getElementById('wrap-pass');
     const eu = document.getElementById('err-user');
-    const ep = document.getElementById('err-pass');
 
     wu.classList.remove('error'); eu.classList.remove('visible');
-    wp.classList.remove('error'); ep.classList.remove('visible');
+    wp.classList.remove('error');
 
-    if (!u) { wu.classList.add('error'); eu.classList.add('visible'); ok = false; }
-    if (!p) { wp.classList.add('error'); ep.classList.add('visible'); ok = false; }
-
-    if (!ok) return;
+    if (!u) { wu.classList.add('error'); eu.classList.add('visible'); return; }
+    if (!p) { wp.classList.add('error'); return; }
 
     const btn = document.getElementById('btnLogin');
     btn.classList.add('loading');
+    showToast('Conectando con la planilla…');
 
     try {
-      const instructor = await buscarEnSheet(u, p);
+      const resp = await fetch(API_URL);
+      if (!resp.ok) { throw new Error('Error HTTP ' + resp.status); }
+      const rows = await resp.json();
+      if (!Array.isArray(rows)) { throw new Error('Respuesta inválida de la API'); }
+
+      let encontrado = null;
+      for (const row of rows) {
+        const rowDni  = String(row['DNI'] || '').trim();
+        const rowPass = String(row['Contraseña inicial'] || '').trim();
+        if (rowDni.toLowerCase() === u.toLowerCase() && rowPass.toLowerCase() === p.toLowerCase()) {
+          encontrado = {
+            nombre: String(row['Nombre y Apellido'] || ''),
+            dni: rowDni,
+            email: String(row['Correo electronico (e-mail)'] || ''),
+            especialidad: String(row['Especialidada/Diciplina'] || '')
+          };
+          break;
+        }
+      }
+
       btn.classList.remove('loading');
 
-      if (instructor) {
-        // Guardar sesión
-        sessionStorage.setItem('hcf_user', JSON.stringify(instructor));
-        showToast('✓ Bienvenido, ' + instructor.nombre.split(' ')[0]);
-        setTimeout(() => {
-          window.location.href = 'hindu-corefit-instructores.html';
-        }, 1000);
+      if (encontrado) {
+        sessionStorage.setItem('hcf_user', JSON.stringify(encontrado));
+        showToast('✓ Bienvenido, ' + encontrado.nombre.split(' ')[0]);
+        setTimeout(() => { window.location.href = 'hindu-corefit-instructores.html'; }, 1000);
       } else {
-        btn.classList.remove('loading');
         wu.classList.add('error'); wp.classList.add('error');
         eu.textContent = 'DNI o contraseña incorrectos';
         eu.classList.add('visible');
         showToast('DNI o contraseña incorrectos', true);
       }
+
     } catch(err) {
       btn.classList.remove('loading');
-      showToast('Error al conectar con la planilla. Intentá de nuevo.', true);
-      console.error(err);
+      showToast('Error: ' + err.message, true);
     }
-  }
-
-  // ── Validación contra Google Sheets ──
-  const API_URL = 'https://script.google.com/macros/s/AKfycbynd3astCNkU_kwt4BOgflllPknkHtfwf3QN-UQpfU9IOd36_1yRvCZ1L98tb7o0oT7/exec';
-
-  function parseLine(line) {
-    const result = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-      else cur += c;
-    }
-    result.push(cur);
-    return result.map(s => s.trim().replace(/^"|"$/g, ''));
-  }
-
-  function getCol(header, row, ...keys) {
-    for (const k of keys) {
-      const idx = header.findIndex(h => h.toLowerCase().includes(k.toLowerCase()));
-      if (idx !== -1 && row[idx]) return row[idx].trim();
-    }
-    return '';
-  }
-
-  async function buscarEnSheet(dni, password) {
-    const resp = await fetch(API_URL);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const rows = await resp.json();
-    for (const row of rows) {
-      const rowDni  = (row['DNI'] || '').trim();
-      const rowPass = (row['Contraseña inicial'] || '').trim();
-      const nombre  = (row['Nombre y Apellido'] || '').trim();
-      const email   = (row['Correo electronico (e-mail)'] || '').trim();
-      const esp     = (row['Especialidada/Diciplina'] || '').trim();
-      const dniNorm  = rowDni.replace(/\s/g,'').toLowerCase();
-      const passNorm = rowPass.replace(/\s/g,'').toLowerCase();
-      const uDni     = dni.replace(/\s/g,'').toLowerCase();
-      const uPass    = password.replace(/\s/g,'').toLowerCase();
-      console.log('Fila: DNI=' + rowDni + ' Pass=' + rowPass);
-      if (dniNorm === uDni && passNorm === uPass) {
-        return { nombre, dni: rowDni, email, especialidad: esp };
-      }
-    }
-    return null;
-  }
-    if (lines.length < 2) return null;
-
-    const header = parseLine(lines[0]);
-
-    for (let i = 1; i < lines.length; i++) {
-      const row = parseLine(lines[i]);
-      const rowDni  = getCol(header, row, 'DNI');
-      const rowPass = getCol(header, row, 'contraseña inicial', 'Contrase', 'Password', 'Clave');
-      const nombre  = getCol(header, row, 'Nombre');
-      const email   = getCol(header, row, 'email', 'correo');
-      const esp     = getCol(header, row, 'Especialidad', 'Diciplina', 'Disciplina');
-
-      // Comparación normalizada: sin espacios y sin importar mayúsculas
-      const dniNorm  = rowDni.replace(/\s/g,'').toLowerCase();
-      const passNorm = rowPass.replace(/\s/g,'').toLowerCase();
-      const uDni     = dni.replace(/\s/g,'').toLowerCase();
-      const uPass    = password.replace(/\s/g,'').toLowerCase();
-
-      console.log(`Fila ${i}: DNI="${rowDni}" Pass="${rowPass}"`);
-
-      if (dniNorm === uDni && passNorm === uPass) {
-        return { nombre, dni: rowDni, email, especialidad: esp };
-      }
-    }
-    return null;
   }
 
   function togglePass() {
@@ -685,7 +627,6 @@
     }
   }
 
-  // ── Modal ──
   function openModal() {
     document.getElementById('modal').classList.add('open');
     document.getElementById('modal-form-content').style.display = 'block';
@@ -698,39 +639,31 @@
     document.getElementById('rec-email').value = '';
   }
 
-  document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
   });
 
   function sendRecovery() {
     const dni   = document.getElementById('rec-dni').value.trim();
     const email = document.getElementById('rec-email').value.trim();
     if (!dni || !email) { showToast('Completá ambos campos', true); return; }
-
-    // Construir URL del Google Form de recuperación
-    // Reemplazar FORM_ID con el ID real del formulario de recuperación
-    const FORM_ID = 'TU_FORM_ID_AQUI';
-    const formUrl = `https://docs.google.com/forms/d/e/${FORM_ID}/viewform?usp=pp_url&entry.DNI_FIELD=${encodeURIComponent(dni)}&entry.EMAIL_FIELD=${encodeURIComponent(email)}`;
-
-    // Por ahora abre el form en nueva pestaña con datos pre-llenados
-    // window.open(formUrl, '_blank');
-
-    // Mostrar confirmación
     document.getElementById('modal-form-content').style.display = 'none';
     document.getElementById('modal-success').style.display = 'block';
-
     setTimeout(closeModal, 3000);
   }
 
-  // ── Toast ──
   function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
+    let t = document.getElementById('toast');
+    if (!t) return;
     t.textContent = msg;
-    t.style.background    = isError ? '#2c1e1e' : '#1e2c1e';
-    t.style.borderColor   = isError ? '#cc2222' : '#3a9e3f';
-    t.style.color         = isError ? '#ef9a9a' : '#a5d6a7';
+    t.style.background  = isError ? '#2c1e1e' : '#1e2c1e';
+    t.style.borderColor = isError ? '#cc2222' : '#3a9e3f';
+    t.style.color       = isError ? '#ef9a9a' : '#a5d6a7';
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
   }
 </script>
 </body>
