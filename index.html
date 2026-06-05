@@ -554,7 +554,28 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const API_URL = 'https://script.google.com/macros/s/AKfycbynd3astCNkU_kwt4BOgflllPknkHtfwf3QN-UQpfU9IOd36_1yRvCZ1L98tb7o0oT7/exec';
+  const API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQNq_S3CBBEvzaDYZDzpmb9-oacIT6FUbRCqkrLGn_aPEtjFR9X-LFCrv3HccWT7_TRmeWanI1iMJPcbx_lzFhu9JjHIku3Ft8yySN3YBMRo7xKHNfYV2htrRuGE8qV5IhcLNa981yYtTXKOfOvj5yR_E2MH_gksQbVNzofEPgLZ-mmRpy6l3fYAI5onHxNsuwPJ6zi753iqInJVhUwxY__SFazwSiq0QroyZaWz_iIRzigkE0jCEbvwGERAKZd0rcS4PLA2nHb-rX47SqgyBhhLUk2uJyaj4o35lEl&lib=Mat9HsVcT7ZOo7r6Vcu1vSTm7gSIWuFsN';
+
+
+  function fetchJSONP(url) {
+    return new Promise(function(resolve, reject) {
+      var cbName = 'cb_' + Math.random().toString(36).slice(2);
+      var script = document.createElement('script');
+      var timer = setTimeout(function() {
+        cleanup();
+        reject(new Error('Timeout - Apps Script no respondió'));
+      }, 12000);
+      function cleanup() {
+        clearTimeout(timer);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+      window[cbName] = function(data) { cleanup(); resolve(data); };
+      script.onerror = function() { cleanup(); reject(new Error('Error cargando el script')); };
+      script.src = url + '?callback=' + cbName;
+      document.head.appendChild(script);
+    });
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -576,9 +597,7 @@
     showToast('Conectando con la planilla…');
 
     try {
-      const resp = await fetch(API_URL);
-      if (!resp.ok) { throw new Error('Error HTTP ' + resp.status); }
-      const rows = await resp.json();
+      const rows = await fetchJSONP(API_URL);
       if (!Array.isArray(rows)) { throw new Error('Respuesta inválida de la API'); }
 
       let encontrado = null;
