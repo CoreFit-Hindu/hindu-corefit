@@ -554,7 +554,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const WORKER_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/';
+  const WORKER_INSTRUCTORES = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/instructores';
+  const WORKER_ALUMNOS      = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
 
   function parseCSV(text) {
     const lines = text.trim().split('\n');
@@ -563,21 +564,33 @@
     return lines.slice(1).map(line => {
       const vals = parseLine(line);
       const obj = {};
-      header.forEach((h, i) => obj[h.trim()] = String(vals[i] || '').trim());
+      header.forEach((h,i) => obj[h.trim()] = String(vals[i]||'').trim());
       return obj;
-    }).filter(r => Object.values(r).some(v => v));
+    }).filter(r => Object.values(r).some(v=>v));
   }
 
   function parseLine(line) {
-    const result = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-      else cur += c;
+    const result=[]; let cur='', inQ=false;
+    for (let i=0; i<line.length; i++) {
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){result.push(cur);cur='';}
+      else cur+=c;
     }
     result.push(cur);
-    return result.map(s => s.trim().replace(/^"|"$/g,''));
+    return result.map(s=>s.trim().replace(/^"|"$/g,''));
+  }
+
+  function buscarEnRows(rows, dni, pass) {
+    for (const row of rows) {
+      const rowDni  = String(row['DNI'] || '').trim();
+      const rowPass = String(row['Contraseña inicial'] || '').trim();
+      if (rowDni.toLowerCase() === dni.toLowerCase() &&
+          rowPass.toLowerCase() === pass.toLowerCase()) {
+        return row;
+      }
+    }
+    return null;
   }
 
   async function handleLogin(e) {
@@ -597,35 +610,49 @@
 
     const btn = document.getElementById('btnLogin');
     btn.classList.add('loading');
-    showToast('Conectando…');
+    showToast('Verificando credenciales…');
 
     try {
-      const resp = await fetch(WORKER_URL);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const text = await resp.text();
-      const rows = parseCSV(text);
+      // Buscar en instructores primero
+      const respInst = await fetch(WORKER_INSTRUCTORES);
+      if (!respInst.ok) throw new Error('HTTP ' + respInst.status);
+      const textInst = await respInst.text();
+      const rowsInst = parseCSV(textInst);
+      const instructor = buscarEnRows(rowsInst, u, p);
 
-      let encontrado = null;
-      for (const row of rows) {
-        const rowDni  = String(row['DNI'] || '').trim();
-        const rowPass = String(row['Contraseña inicial'] || '').trim();
-        if (rowDni.toLowerCase() === u.toLowerCase() && rowPass.toLowerCase() === p.toLowerCase()) {
-          encontrado = {
-            nombre: String(row['Nombre y Apellido'] || ''),
-            dni: rowDni,
-            email: String(row['Correo electronico (e-mail)'] || ''),
-            especialidad: String(row['Especialidada/Diciplina'] || '')
-          };
-          break;
-        }
+      if (instructor) {
+        sessionStorage.setItem('hcf_user', JSON.stringify({
+          nombre: String(instructor['Nombre y Apellido'] || ''),
+          dni: u,
+          email: String(instructor['Correo electronico (e-mail)'] || ''),
+          especialidad: String(instructor['Especialidada/Diciplina'] || ''),
+          rol: 'instructor'
+        }));
+        btn.classList.remove('loading');
+        showToast('✓ Bienvenido, ' + (instructor['Nombre y Apellido']||'').split(' ')[0]);
+        setTimeout(() => { window.location.href = 'instructores.html'; }, 1000);
+        return;
       }
+
+      // Si no es instructor, buscar en alumnos
+      const respAlum = await fetch(WORKER_ALUMNOS);
+      if (!respAlum.ok) throw new Error('HTTP ' + respAlum.status);
+      const textAlum = await respAlum.text();
+      const rowsAlum = parseCSV(textAlum);
+      const alumno = buscarEnRows(rowsAlum, u, p);
 
       btn.classList.remove('loading');
 
-      if (encontrado) {
-        sessionStorage.setItem('hcf_user', JSON.stringify(encontrado));
-        showToast('✓ Bienvenido, ' + encontrado.nombre.split(' ')[0]);
-        setTimeout(() => { window.location.href = 'instructores.html'; }, 1000);
+      if (alumno) {
+        sessionStorage.setItem('hcf_user', JSON.stringify({
+          nombre: String(alumno['Nombre y Apellido'] || ''),
+          dni: u,
+          actividad: String(alumno['Actividad'] || ''),
+          horario: String(alumno['Horario asignado'] || ''),
+          rol: 'alumno'
+        }));
+        showToast('✓ Bienvenido, ' + (alumno['Nombre y Apellido']||'').split(' ')[0]);
+        setTimeout(() => { window.location.href = 'alumno.html'; }, 1000);
       } else {
         wu.classList.add('error'); wp.classList.add('error');
         eu.textContent = 'DNI o contraseña incorrectos';
@@ -678,7 +705,7 @@
     setTimeout(closeModal, 3000);
   }
 
-  function showToast(msg, isError = false) {
+  function showToast(msg, isError=false) {
     const t = document.getElementById('toast');
     if (!t) return;
     t.textContent = msg;
