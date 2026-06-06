@@ -253,15 +253,16 @@ async function init() {
     const resp = await fetch(WORKER_ALUMNOS);
     const text = await resp.text();
     const rows = parseCSV(text);
-    const alumno = rows.find(r => String(r['DNI']||'').trim() === user.dni);
+    const alumno = rows.find(r => String(r['DNI']||'').trim() === String(user.dni||'').trim());
+    console.log('Buscando DNI:', user.dni, '| Encontrado:', alumno ? alumno['Nmbre y Apellido'] : 'NO');
 
     if (alumno) {
-      const nombre   = String(alumno['Nmbre y Apellido']||alumno['Nombre y Apellido']||'').trim();
+      const nombre   = String(alumno['Nmbre y Apellido']||'').trim();
       const dni      = String(alumno['DNI']||'').trim();
       const act      = String(alumno['Actividad']||'').trim();
-      const horario  = String(alumno['Horario Asignado']||alumno['Horario asignado']||'').trim();
-      const historial= String(alumno['Htorial de Actividad Fisica']||alumno['Historial de actividad física']||alumno['Historial de actividad fisica']||'').trim();
-      const foto     = fotoUrl(String(alumno['Subir una Foto']||alumno['Subir una foto']||'').trim());
+      const horario  = String(alumno['Horario Asignado']||'').trim();
+      const historial= String(alumno['Htorial de Actividad Fisica']||'').trim();
+      const foto     = fotoUrl(String(alumno['Subir una Foto']||'').trim());
       const ini      = iniciales(nombre);
 
       // Perfil
