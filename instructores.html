@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hindú CoreFit — Instructores</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green: #3a9e3f;
+  --green-dark: #2d7a31;
+  --green-light: #4caf50;
+  --green-glow: rgba(58,158,63,0.3);
+  --red: #cc2222;
+  --bg: #0d1117;
+  --bg2: #131920;
+  --bg3: #1a2230;
+  --surface: rgba(255,255,255,0.055);
+  --surface2: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.16);
+  --text: #e4e8f0;
+  --text2: #8a95a8;
+  --text3: #5a6478;
+  --font-display: 'Rajdhani', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+html { font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 58px;
+}
+
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.35rem; font-weight: 700;
+  letter-spacing: 0.03em;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.nav-shield {
+  width: 28px; height: 32px;
+}
+
+.nav-tabs {
+  display: flex; gap: 4px;
+}
+
+.nav-tab {
+  background: none; border: none;
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
+  color: var(--text2);
+  padding: 6px 14px; border-radius: 6px;
+  cursor: pointer; transition: all 0.18s;
+  letter-spacing: 0.02em;
+}
+.nav-tab:hover { color: var(--text); background: var(--surface); }
+.nav-tab.active { color: var(--green-light); background: rgba(58,158,63,0.12); }
+
+.nav-right {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.btn-sync {
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text2); font-size: 0.8rem; font-family: var(--font-body);
+  padding: 6px 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.18s;
+}
+.btn-sync:hover { border-color: var(--green); color: var(--green-light); }
+.btn-sync svg { width: 14px; height: 14px; }
+.btn-sync.spinning svg { animation: spin 0.8s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── MAIN ── */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  animation: fadeUp 0.4s ease both;
+}
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+.stat-label {
+  font-size: 0.75rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.stat-val {
+  font-family: var(--font-display);
+  font-size: 2rem; font-weight: 700;
+  color: var(--text); line-height: 1;
+}
+.stat-val.green { color: var(--green-light); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  position: relative; flex: 1; min-width: 200px;
+}
+.search-wrap svg {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text3);
+  pointer-events: none;
+}
+.search-wrap input {
+  width: 100%; height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 14px 0 38px;
+  font-family: var(--font-body); font-size: 0.88rem;
+  color: var(--text); outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.search-wrap input::placeholder { color: var(--text3); }
+.search-wrap input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.filter-sel {
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  font-family: var(--font-body); font-size: 0.85rem;
+  color: var(--text2); outline: none; cursor: pointer;
+  transition: border-color 0.18s;
+}
+.filter-sel:focus { border-color: var(--green); }
+.filter-sel option { background: #1a2230; }
+
+.result-count {
+  font-size: 0.82rem; color: var(--text3);
+  white-space: nowrap; margin-left: auto;
+}
+
+/* ── GRID ── */
+.instructores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  animation: fadeUp 0.4s ease both;
+}
+.card:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+}
+
+.card-top {
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+
+.avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 700;
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+.av-0 { background: rgba(58,158,63,0.2);  color: #81c784; }
+.av-1 { background: rgba(33,150,243,0.2); color: #64b5f6; }
+.av-2 { background: rgba(255,152,0,0.2);  color: #ffb74d; }
+.av-3 { background: rgba(156,39,176,0.2); color: #ce93d8; }
+.av-4 { background: rgba(244,67,54,0.2);  color: #ef9a9a; }
+
+.card-info { flex: 1; min-width: 0; }
+.card-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--text); line-height: 1.2;
+  margin-bottom: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.esp-badge {
+  display: inline-block;
+  font-size: 0.7rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
+}
+.esp-im  { background: rgba(58,158,63,0.15);  color: #81c784; }
+.esp-if  { background: rgba(33,150,243,0.15); color: #64b5f6; }
+.esp-asm { background: rgba(255,152,0,0.15);  color: #ffb74d; }
+.esp-asf { background: rgba(156,39,176,0.15); color: #ce93d8; }
+.esp-def { background: rgba(255,255,255,0.08); color: var(--text2); }
+
+.card-meta-row {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-top: 2px;
+}
+.card-meta-item {
+  font-size: 0.75rem; color: var(--text3);
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-meta-item svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.card-footer {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.horarios-wrap {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.horario-pill {
+  font-size: 0.65rem; font-weight: 600;
+  padding: 2px 7px; border-radius: 20px;
+  background: var(--surface2); color: var(--text2);
+  letter-spacing: 0.02em;
+}
+.horario-pill.am { background: rgba(255,193,7,0.12); color: #ffd54f; }
+.horario-pill.pm { background: rgba(33,150,243,0.12); color: #90caf9; }
+
+.btn-perfil {
+  background: none; border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text2); font-size: 0.75rem; font-family: var(--font-body);
+  padding: 5px 12px; cursor: pointer;
+  transition: all 0.18s; white-space: nowrap; flex-shrink: 0;
+}
+.btn-perfil:hover {
+  border-color: var(--green);
+  color: var(--green-light);
+  background: rgba(58,158,63,0.08);
+}
+
+/* ── EMPTY / LOADING / ERROR ── */
+.state-msg {
+  grid-column: 1 / -1;
+  text-align: center; padding: 4rem 0;
+  color: var(--text3); font-size: 0.92rem;
+}
+.state-msg svg {
+  display: block; margin: 0 auto 12px;
+  opacity: 0.4; width: 40px; height: 40px;
+}
+.state-msg .loader {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+
+/* ── MODAL PERFIL ── */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 2rem 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+  overflow-y: auto;
+}
+.modal-bg.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 100%; max-width: 520px;
+  transform: translateY(16px);
+  transition: transform 0.2s;
+  overflow: hidden;
+}
+.modal-bg.open .modal { transform: translateY(0); }
+
+.modal-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.modal-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+  overflow: hidden;
+}
+.modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.modal-title h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem; font-weight: 700; color: var(--text);
+  line-height: 1.2; margin-bottom: 4px;
+}
+
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); padding: 4px;
+  transition: color 0.18s;
+}
+.modal-close:hover { color: var(--text); }
+
+.modal-body { padding: 1.5rem; }
+
+.detail-section { margin-bottom: 1.25rem; }
+.detail-section h3 {
+  font-size: 0.7rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+  font-size: 0.88rem; color: var(--text2);
+}
+.detail-row svg { width: 15px; height: 15px; color: var(--text3); flex-shrink: 0; }
+.detail-row span { color: var(--text); }
+
+.horarios-grid-modal {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 5px; margin-top: 6px;
+}
+.dia-cell {
+  text-align: center;
+  font-size: 0.7rem; color: var(--text3);
+}
+.dia-cell .dia-label {
+  font-size: 0.65rem; color: var(--text3);
+  margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.dia-pill {
+  padding: 3px 2px; border-radius: 4px;
+  font-size: 0.62rem; font-weight: 600;
+  text-align: center;
+}
+.dia-pill.am { background: rgba(255,193,7,0.15); color: #ffd54f; }
+.dia-pill.pm { background: rgba(33,150,243,0.15); color: #90caf9; }
+.dia-pill.off { background: var(--surface); color: var(--text3); opacity: 0.4; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .nav-tabs { display: none; }
+  main { padding: 1.25rem 1rem 3rem; }
+}
+
+.update-time {
+  font-size: 0.72rem; color: var(--text3);
+  margin-left: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <svg class="nav-shield" viewBox="0 0 28 32" fill="none">
+      <path d="M14 1L1 6.5V17c0 7.5 5.5 13 13 16 7.5-3 13-8.5 13-16V6.5L14 1z" fill="#2d6e32"/>
+      <text x="14" y="16" text-anchor="middle" font-family="Rajdhani,sans-serif" font-weight="700" font-size="6" fill="white" letter-spacing="0.5">HINDÚ</text>
+      <rect x="5" y="18" width="18" height="1.5" fill="white" opacity="0.8"/>
+      <rect x="5" y="21" width="18" height="1.5" fill="white" opacity="0.5"/>
+    </svg>
+    HINDÚ <span style="color:var(--text2); font-weight:500; margin:0 4px">—</span> CoreFit
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active">Instructores</button>
+    <button class="nav-tab" onclick="alert('Próximamente: Alumnos')">Alumnos</button>
+    <button class="nav-tab" onclick="alert('Próximamente: Membresías')">Membresías</button>
+    <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
+  </div>
+
+  <div class="nav-right">
+    <button class="btn-sync" id="btnSync" onclick="cargarDatos(true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Actualizar
+    </button>
+    <span class="update-time" id="updateTime"></span>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total instructores</div>
+      <div class="stat-val green" id="st-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Instructor / Musculación</div>
+      <div class="stat-val" id="st-im">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Instructor / Funcional</div>
+      <div class="stat-val" id="st-if">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Auxiliares suplentes</div>
+      <div class="stat-val" id="st-aux">—</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="search" placeholder="Buscar por nombre, DNI o email…" oninput="filtrar()">
+    </div>
+    <select class="filter-sel" id="filtroEsp" onchange="filtrar()">
+      <option value="">Todas las especialidades</option>
+      <option>Instructor/Musculacion</option>
+      <option>Instructor/Funcional</option>
+      <option>Auxiliar Suplente/Musculacion</option>
+      <option>Auxiliar Suplente/Funcional</option>
+    </select>
+    <select class="filter-sel" id="filtroHorario" onchange="filtrar()">
+      <option value="">Cualquier horario</option>
+      <option value="Mañana">Mañana</option>
+      <option value="Tarde">Tarde</option>
+    </select>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <!-- Grid -->
+  <div class="instructores-grid" id="grid">
+    <div class="state-msg">
+      <div class="loader"></div>
+      Cargando instructores desde la planilla…
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal perfil -->
+<div class="modal-bg" id="modalBg" onclick="cerrarModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-avatar" id="m-avatar"></div>
+      <div class="modal-title">
+        <h2 id="m-nombre"></h2>
+        <span class="esp-badge" id="m-esp"></span>
+      </div>
+      <button class="modal-close" onclick="cerrarModalBtn()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-section">
+        <h3>Datos de contacto</h3>
+        <div class="detail-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+          <span id="m-email">—</span>
+        </div>
+        <div class="detail-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4.36 15 19.4 19.4 0 0 1 1.12 4.18 2 2 0 0 1 3.09 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.72 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.36 1.85.59 2.81.72A2 2 0 0 1 21 16.92z"/></svg>
+          <span id="m-tel">—</span>
+        </div>
+        <div class="detail-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="m-dni">DNI: —</span>
+        </div>
+      </div>
+      <div class="detail-section">
+        <h3>Horarios disponibles</h3>
+        <div class="horarios-grid-modal" id="m-horarios"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/';
+let todos = [];
+
+function getNombre(r)   { return String(r['Nombre y Apellido'] || '').trim(); }
+function getDNI(r)      { return String(r['DNI'] || '').trim(); }
+function getTel(r)      { return String(r['Telefono'] || '').trim(); }
+function getEmail(r)    { return String(r['Correo electronico (e-mail)'] || '').trim(); }
+function getEsp(r)      { return String(r['Especialidada/Diciplina'] || '').trim(); }
+function getHorarios(r) { return String(r['Horarios Disponible'] || '').trim(); }
+function getFoto(r)     { return String(r['Sbir una foto'] || '').trim(); }
+
+function fotoUrl(url) {
+  if (!url) return '';
+  const m = url.match(/[?&]id=([\w-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200';
+  return url;
+}
+function iniciales(n) {
+  const p = n.trim().split(' ').filter(Boolean);
+  return p.length >= 2 ? (p[0][0]+p[1][0]).toUpperCase() : n.slice(0,2).toUpperCase();
+}
+function avColor(i) { return ['av-0','av-1','av-2','av-3','av-4'][i%5]; }
+function parseHorarios(s) { return s ? s.split(',').map(x=>x.trim()).filter(Boolean) : []; }
+function espClass(e) {
+  const s = (e||'').toLowerCase();
+  if (s.includes('instructor') && s.includes('musc')) return 'esp-im';
+  if (s.includes('instructor') && s.includes('func')) return 'esp-if';
+  if (s.includes('auxiliar')   && s.includes('musc')) return 'esp-asm';
+  if (s.includes('auxiliar')   && s.includes('func')) return 'esp-asf';
+  return 'esp-def';
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const header = parseLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseLine(line);
+    const obj = {};
+    header.forEach((h,i) => obj[h.trim()] = String(vals[i]||'').trim());
+    return obj;
+  }).filter(r => Object.values(r).some(v=>v));
+}
+function parseLine(line) {
+  const result=[]; let cur='', inQ=false;
+  for (let i=0; i<line.length; i++) {
+    const c = line[i];
+    if (c==='"') { inQ=!inQ; }
+    else if (c===',' && !inQ) { result.push(cur); cur=''; }
+    else cur+=c;
+  }
+  result.push(cur);
+  return result.map(s=>s.trim().replace(/^"|"$/g,''));
+}
+
+async function cargarDatos(manual=false) {
+  const btn = document.getElementById('btnSync');
+  btn.classList.add('spinning');
+  document.getElementById('grid').innerHTML =
+    '<div class="state-msg"><div class="loader"></div>Sincronizando con la planilla…</div>';
+  try {
+    const resp = await fetch(WORKER_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    todos = parseCSV(text);
+    actualizarStats();
+    filtrar();
+    const now = new Date();
+    document.getElementById('updateTime').textContent =
+      'Actualizado ' + now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    if (manual) mostrarToast('✓ Datos actualizados');
+  } catch(e) {
+    document.getElementById('grid').innerHTML =
+      '<div class="state-msg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Error: ' + e.message + '</div>';
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+function actualizarStats() {
+  document.getElementById('st-total').textContent = todos.length;
+  document.getElementById('st-im').textContent  = todos.filter(r=>getEsp(r).toLowerCase().includes('instructor')&&getEsp(r).toLowerCase().includes('musc')).length;
+  document.getElementById('st-if').textContent  = todos.filter(r=>getEsp(r).toLowerCase().includes('instructor')&&getEsp(r).toLowerCase().includes('func')).length;
+  document.getElementById('st-aux').textContent = todos.filter(r=>getEsp(r).toLowerCase().includes('auxiliar')).length;
+}
+
+function filtrar() {
+  const q=document.getElementById('search').value.toLowerCase();
+  const esp=document.getElementById('filtroEsp').value.toLowerCase();
+  const hor=document.getElementById('filtroHorario').value;
+  const res=todos.filter(r=>{
+    if(q && !getNombre(r).toLowerCase().includes(q) && !getDNI(r).includes(q) && !getEmail(r).toLowerCase().includes(q)) return false;
+    if(esp && !getEsp(r).toLowerCase().includes(esp)) return false;
+    if(hor && !getHorarios(r).toLowerCase().includes(hor)) return false;
+    return true;
+  });
+  document.getElementById('resultCount').textContent = res.length+' instructor'+(res.length!==1?'es':'');
+  renderGrid(res);
+}
+
+function renderGrid(lista) {
+  const grid=document.getElementById('grid');
+  if(!lista.length){grid.innerHTML='<div class="state-msg">No se encontraron instructores.</div>';return;}
+  grid.innerHTML=lista.map((r,i)=>{
+    const nombre=getNombre(r)||'Sin nombre', esp=getEsp(r), tel=getTel(r), email=getEmail(r);
+    const foto=fotoUrl(getFoto(r)), hors=parseHorarios(getHorarios(r)), ini=iniciales(nombre), idx=todos.indexOf(r);
+    const av=foto?'<img src="'+foto+'" alt="'+nombre+'" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=''+ini+''">':ini;
+    const pills=hors.slice(0,4).map(h=>{
+      const am=h.toLowerCase().includes('mañana'), pm=h.toLowerCase().includes('tarde');
+      const dia=h.replace(/mañana|tarde/gi,'').trim().slice(0,3);
+      return '<span class="horario-pill '+(am?'am':pm?'pm':'')+'">'+dia+(am?' AM':pm?' PM':'')+'</span>';
+    }).join('')+(hors.length>4?'<span class="horario-pill">+'+(hors.length-4)+'</span>':'');
+    return '<div class="card" style="animation-delay:'+(i*.05)+'s" onclick="abrirPerfil('+idx+')">'
+      +'<div class="card-top"><div class="avatar '+avColor(i)+'">'+av+'</div>'
+      +'<div class="card-info"><div class="card-name">'+nombre+'</div>'
+      +'<span class="esp-badge '+espClass(esp)+'">'+(esp||'Sin especialidad')+'</span>'
+      +'<div class="card-meta-row">'
+      +(email?'<div class="card-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>'+email+'</div>':'')
+      +(tel?'<div class="card-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.4 19.4 0 0 1 1.12 4.18 2 2 0 0 1 3.09 2h3a2 2 0 0 1 2 1.72 12 12 0 0 0 .72 2.81 2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12 12 0 0 0 2.81.72A2 2 0 0 1 21 16.92z"/></svg>'+tel+'</div>':'')
+      +'</div></div></div>'
+      +'<div class="card-footer"><div class="horarios-wrap">'+(pills||'<span style="font-size:.75rem;color:var(--text3)">Sin horarios</span>')+'</div>'
+      +'<button class="btn-perfil" onclick="event.stopPropagation();abrirPerfil('+idx+')">Ver perfil →</button></div></div>';
+  }).join('');
+}
+
+function abrirPerfil(idx) {
+  const r=todos[idx], nombre=getNombre(r), esp=getEsp(r);
+  const tel=getTel(r), email=getEmail(r), dni=getDNI(r);
+  const foto=fotoUrl(getFoto(r)), hors=parseHorarios(getHorarios(r)), ini=iniciales(nombre||'?');
+  const mAv=document.getElementById('m-avatar');
+  mAv.className='modal-avatar '+avColor(idx);
+  mAv.innerHTML=foto?'<img src="'+foto+'" alt="'+nombre+'" onerror="this.style.display='none';this.parentElement.textContent=''+ini+''">':ini;
+  document.getElementById('m-nombre').textContent=nombre||'Sin nombre';
+  const mEsp=document.getElementById('m-esp'); mEsp.textContent=esp||'—'; mEsp.className='esp-badge '+espClass(esp);
+  document.getElementById('m-email').textContent=email||'—';
+  document.getElementById('m-tel').textContent=tel||'—';
+  document.getElementById('m-dni').textContent='DNI: '+(dni||'—');
+  const dias=['Lunes','Martes','Miércoles','Jueves','Viernes'];
+  document.getElementById('m-horarios').innerHTML=dias.map(d=>{
+    const am=hors.some(h=>h.toLowerCase().includes(d.toLowerCase().slice(0,3))&&h.toLowerCase().includes('mañana'));
+    const pm=hors.some(h=>h.toLowerCase().includes(d.toLowerCase().slice(0,3))&&h.toLowerCase().includes('tarde'));
+    return '<div class="dia-cell"><div class="dia-label">'+d.slice(0,3)+'</div>'
+      +'<div class="dia-pill am" style="'+(am?'':'opacity:.2')+'">AM</div>'
+      +'<div style="height:3px"></div>'
+      +'<div class="dia-pill pm" style="'+(pm?'':'opacity:.2')+'">PM</div></div>';
+  }).join('');
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function cerrarModal(e){if(e.target===document.getElementById('modalBg'))cerrarModalBtn();}
+function cerrarModalBtn(){document.getElementById('modalBg').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModalBtn();});
+
+function mostrarToast(msg){
+  let t=document.getElementById('toast-gl');
+  if(!t){t=document.createElement('div');t.id='toast-gl';
+  t.style.cssText='position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);background:#1e2c1e;border:1px solid var(--green);color:#a5d6a7;padding:10px 20px;border-radius:10px;font-size:.85rem;opacity:0;pointer-events:none;transition:all .3s;z-index:999;white-space:nowrap;font-family:var(--font-body)';
+  document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(10px)';},2500);
+}
+
+cargarDatos();
+</script>
+</body>
+</html>

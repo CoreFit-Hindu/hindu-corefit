@@ -625,7 +625,7 @@
       if (encontrado) {
         sessionStorage.setItem('hcf_user', JSON.stringify(encontrado));
         showToast('✓ Bienvenido, ' + encontrado.nombre.split(' ')[0]);
-        setTimeout(() => { window.location.href = 'hindu-corefit-instructores.html'; }, 1000);
+        setTimeout(() => { window.location.href = 'instructores.html'; }, 1000);
       } else {
         wu.classList.add('error'); wp.classList.add('error');
         eu.textContent = 'DNI o contraseña incorrectos';
