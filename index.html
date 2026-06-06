@@ -584,7 +584,11 @@
   function buscarEnRows(rows, dni, pass) {
     for (const row of rows) {
       const rowDni  = String(row['DNI'] || '').trim();
-      const rowPass = String(row['Contraseña inicial'] || '').trim();
+      // Buscar contraseña con distintas variantes de mayúsculas
+      const rowPass = String(
+        row['Contraseña Inicial'] || row['Contraseña inicial'] ||
+        row['contraseña inicial'] || row['Password'] || ''
+      ).trim();
       if (rowDni.toLowerCase() === dni.toLowerCase() &&
           rowPass.toLowerCase() === pass.toLowerCase()) {
         return row;
@@ -645,10 +649,10 @@
 
       if (alumno) {
         sessionStorage.setItem('hcf_user', JSON.stringify({
-          nombre: String(alumno['Nombre y Apellido'] || ''),
+          nombre: String(alumno['Nmbre y Apellido'] || alumno['Nombre y Apellido'] || ''),
           dni: u,
           actividad: String(alumno['Actividad'] || ''),
-          horario: String(alumno['Horario asignado'] || ''),
+          horario: String(alumno['Horario Asignado'] || alumno['Horario asignado'] || ''),
           rol: 'alumno'
         }));
         showToast('✓ Bienvenido, ' + (alumno['Nombre y Apellido']||'').split(' ')[0]);

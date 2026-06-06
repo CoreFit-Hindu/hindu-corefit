@@ -256,12 +256,12 @@ async function init() {
     const alumno = rows.find(r => String(r['DNI']||'').trim() === user.dni);
 
     if (alumno) {
-      const nombre   = String(alumno['Nombre y Apellido']||'').trim();
+      const nombre   = String(alumno['Nmbre y Apellido']||alumno['Nombre y Apellido']||'').trim();
       const dni      = String(alumno['DNI']||'').trim();
       const act      = String(alumno['Actividad']||'').trim();
-      const horario  = String(alumno['Horario asignado']||'').trim();
-      const historial= String(alumno['Historial de actividad física']||alumno['Historial de actividad fisica']||'').trim();
-      const foto     = fotoUrl(String(alumno['Subir una foto']||'').trim());
+      const horario  = String(alumno['Horario Asignado']||alumno['Horario asignado']||'').trim();
+      const historial= String(alumno['Htorial de Actividad Fisica']||alumno['Historial de actividad física']||alumno['Historial de actividad fisica']||'').trim();
+      const foto     = fotoUrl(String(alumno['Subir una Foto']||alumno['Subir una foto']||'').trim());
       const ini      = iniciales(nombre);
 
       // Perfil
