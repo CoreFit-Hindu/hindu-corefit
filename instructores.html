@@ -607,6 +607,8 @@ function parseLine(line) {
   return result.map(s=>s.trim().replace(/^"|"$/g,''));
 }
 
+function imgErr(el,ini){el.style.display="none";el.parentElement.textContent=ini;}
+
 async function cargarDatos(manual=false) {
   const btn = document.getElementById('btnSync');
   btn.classList.add('spinning');
@@ -658,7 +660,7 @@ function renderGrid(lista) {
   grid.innerHTML=lista.map((r,i)=>{
     const nombre=getNombre(r)||'Sin nombre', esp=getEsp(r), tel=getTel(r), email=getEmail(r);
     const foto=fotoUrl(getFoto(r)), hors=parseHorarios(getHorarios(r)), ini=iniciales(nombre), idx=todos.indexOf(r);
-    const av=foto?'<img src="'+foto+'" alt="'+nombre+'" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=''+ini+''">':ini;
+    const av=foto?('<img src="'+foto+'" alt="'+nombre+'" loading="lazy" onerror="imgErr(this,this.dataset.ini)" data-ini="'+ini+'">'):ini;
     const pills=hors.slice(0,4).map(h=>{
       const am=h.toLowerCase().includes('mañana'), pm=h.toLowerCase().includes('tarde');
       const dia=h.replace(/mañana|tarde/gi,'').trim().slice(0,3);
@@ -683,7 +685,7 @@ function abrirPerfil(idx) {
   const foto=fotoUrl(getFoto(r)), hors=parseHorarios(getHorarios(r)), ini=iniciales(nombre||'?');
   const mAv=document.getElementById('m-avatar');
   mAv.className='modal-avatar '+avColor(idx);
-  mAv.innerHTML=foto?'<img src="'+foto+'" alt="'+nombre+'" onerror="this.style.display='none';this.parentElement.textContent=''+ini+''">':ini;
+  mAv.innerHTML=foto?('<img src="'+foto+'" alt="'+nombre+'" onerror="imgErr(this,this.dataset.ini)" data-ini="'+ini+'">'):ini;
   document.getElementById('m-nombre').textContent=nombre||'Sin nombre';
   const mEsp=document.getElementById('m-esp'); mEsp.textContent=esp||'—'; mEsp.className='esp-badge '+espClass(esp);
   document.getElementById('m-email').textContent=email||'—';
