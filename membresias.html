@@ -622,9 +622,7 @@ async function guardarPago() {
       instructor: dniInstructor,
       fecha: fecha,
     });
-    const resp = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
-    const result = await resp.json();
-    if (!result.ok) throw new Error('Error en Apps Script');
+    fetch(APPS_SCRIPT_URL + '?' + params.toString()).catch(e => console.warn('Error al guardar:', e));
   } catch(e) {
     console.warn('Error al guardar:', e);
   }
