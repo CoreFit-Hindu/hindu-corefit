@@ -287,7 +287,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
       <div class="form-row two-col">
         <div>
           <label>Forma de Pago</label>
-          <select id="f-forma">
+          <select id="f-forma" onchange="toggleComprobante()">
             <option>Efectivo</option>
             <option>Transferencia</option>
           </select>
@@ -296,6 +296,13 @@ tbody td.nombre{color:var(--text);font-weight:600;}
           <label>Fecha de Pago</label>
           <input type="date" id="f-fecha">
         </div>
+      </div>
+      <div class="form-row" id="row-comprobante" style="display:none">
+        <label>Comprobante (link de imagen o Drive)</label>
+        <input type="text" id="f-comprobante" placeholder="Pegá el link del comprobante…">
+      </div>
+      <div id="aviso-efectivo" style="font-size:0.82rem;color:#81c784;background:rgba(58,158,63,0.1);border:1px solid rgba(58,158,63,0.2);border-radius:8px;padding:8px 12px;display:block">
+        💵 Este pago se sumará al flujo de caja con estado <strong>Validado</strong>
       </div>
     </div>
     <div class="modal-footer">
@@ -482,10 +489,13 @@ async function validarPago(idx, nuevoEstado) {
   if (!confirm(`¿${nuevoEstado} el pago de ${nombre}?`)) return;
   try {
     mostrarToast('Guardando…');
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ dni, fecha, estado: nuevoEstado }),
+    const params = new URLSearchParams({
+      action: 'validar',
+      dni: dni,
+      fecha: fecha,
+      estado: nuevoEstado,
     });
+    await fetch(APPS_SCRIPT_URL + '?' + params.toString());
     todos[idx]['Estado'] = nuevoEstado;
     actualizarStats();
     poblarFiltroInstructor();
@@ -514,12 +524,31 @@ function cerrarModal() {
 function cerrarModalClick(e) { if (e.target === document.getElementById('modalBg')) cerrarModal(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
 
+function toggleComprobante() {
+  const forma = document.getElementById('f-forma').value;
+  const rowComp = document.getElementById('row-comprobante');
+  const avisoEf = document.getElementById('aviso-efectivo');
+  if (forma === 'Transferencia') {
+    rowComp.style.display = 'block';
+    avisoEf.style.display = 'none';
+  } else {
+    rowComp.style.display = 'none';
+    avisoEf.style.display = 'block';
+  }
+}
+
 function buscarAlumno() {
   const dni = document.getElementById('f-dni').value.trim();
   const alumno = alumnos.find(a => String(a['DNI']||'').trim() === dni);
-  document.getElementById('f-nombre').value = alumno
-    ? String(alumno['Nmbre y Apellido'] || alumno['Nombre y Apellido'] || '').trim()
-    : '';
+  if (alumno) {
+    const nombre = String(
+      alumno['Nmbre y Apellido'] || alumno['Nombre y Apellido'] ||
+      alumno['nombre'] || Object.values(alumno)[1] || ''
+    ).trim();
+    document.getElementById('f-nombre').value = nombre;
+  } else {
+    document.getElementById('f-nombre').value = '';
+  }
 }
 
 function guardarPago() {
