@@ -388,10 +388,10 @@ function poblarFiltroInstructor() {
 }
 
 function actualizarStats() {
-  const validados  = base.filter(r => getVal(r,'Estado').toLowerCase() === 'validado');
-  const pendientes = base.filter(r => getVal(r,'Estado').toLowerCase() === 'pendiente');
   const instructor = document.getElementById('filtroInstructor') ? document.getElementById('filtroInstructor').value : '';
   const base = instructor ? todos.filter(r => getVal(r,'DNI del Instructor') === instructor) : todos;
+  const validados  = base.filter(r => getVal(r,'Estado').toLowerCase() === 'validado');
+  const pendientes = base.filter(r => getVal(r,'Estado').toLowerCase() === 'pendiente');
   const efectivo   = base.filter(r => getVal(r,'Forma de Pago').toLowerCase() === 'efectivo' && getVal(r,'Estado').toLowerCase() === 'validado');
   const totalEfect = efectivo.reduce((s,r) => s + (parseFloat(getVal(r,'Monto'))||0), 0);
 
