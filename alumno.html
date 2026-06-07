@@ -156,13 +156,13 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
   <div class="perfil-card">
     <div class="perfil-avatar" id="perfilAvatar"></div>
     <div class="perfil-info">
-      <h2 id="perfilNombre">Cargando…</h2>
-      <p id="perfilDni"></p>
-      <p id="perfilHistorial" style="margin-top:4px"></p>
+      <h2 id="perfilNombre" style="font-size:1.6rem;margin-bottom:6px">Cargando…</h2>
+      <p id="perfilDni" style="font-size:0.82rem;color:var(--text3)"></p>
+      <p id="perfilHistorial" style="margin-top:6px;font-size:0.82rem;color:var(--text2)"></p>
     </div>
-    <div class="perfil-badge">
-      <div class="act" id="perfilActividad">—</div>
-      <div class="hor" id="perfilHorario">—</div>
+    <div class="perfil-badge" style="min-width:200px">
+      <div class="act" id="perfilActividad" style="font-size:1.2rem;margin-bottom:6px">—</div>
+      <div class="hor" id="perfilHorario" style="font-size:0.75rem;line-height:1.5">—</div>
     </div>
   </div>
 
@@ -176,11 +176,15 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
     </div>
     <div class="membresia-card" id="membresiaCard">
       <div class="mem-estado">
-        <div class="mem-dot pendiente"></div>
+        <div class="mem-dot pendiente" id="mem-dot"></div>
         <div>
-          <div class="mem-label">Sin datos de membresía</div>
-          <div class="mem-detalle">Este módulo estará disponible próximamente</div>
+          <div class="mem-label" id="mem-label">Cargando…</div>
+          <div class="mem-detalle" id="mem-detalle"></div>
         </div>
+      </div>
+      <div>
+        <div class="mem-monto" id="mem-monto"></div>
+        <div class="mem-vence" id="mem-vence"></div>
       </div>
     </div>
   </div>
@@ -212,7 +216,8 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 </main>
 
 <script>
-const WORKER_ALUMNOS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 
 function iniciales(n) {
   const p = (n||'').trim().split(' ').filter(Boolean);
@@ -250,11 +255,18 @@ async function init() {
 
   // Cargar datos del alumno desde la sheet
   try {
-    const resp = await fetch(WORKER_ALUMNOS);
-    const text = await resp.text();
-    const rows = parseCSV(text);
-    const alumno = rows.find(r => String(r['DNI']||'').trim() === String(user.dni||'').trim());
-    console.log('Buscando DNI:', user.dni, '| Encontrado:', alumno ? alumno['Nmbre y Apellido'] : 'NO');
+    const [respAlum, respMem] = await Promise.all([
+      fetch(WORKER_ALUMNOS),
+      fetch(WORKER_MEMBRESIAS)
+    ]);
+    const rows    = parseCSV(await respAlum.text());
+    const pagos   = parseCSV(await respMem.text());
+    const alumno  = rows.find(r => String(r['DNI']||'').trim() === String(user.dni||'').trim());
+    // Buscar último pago del alumno
+    const misPagos = pagos
+      .filter(r => String(r['DNI del Alumno']||'').trim() === String(user.dni||'').trim())
+      .sort((a,b) => new Date(b['Fecha de Pago']) - new Date(a['Fecha de Pago']));
+    const ultimoPago = misPagos[0] || null;
 
     if (alumno) {
       const nombre   = String(alumno['Nmbre y Apellido']||'').trim();
@@ -268,22 +280,81 @@ async function init() {
       // Perfil
       const av = document.getElementById('perfilAvatar');
       if (foto) {
-        av.innerHTML = '<img src="'+foto+'" alt="'+nombre+'" onerror="imgErr(this,\''+ini+'\')">';
+        av.innerHTML = '<img src="'+foto+'" alt="foto" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+ini+'\'" >';
       } else {
         av.textContent = ini;
       }
-      document.getElementById('perfilNombre').textContent = nombre;
+      document.getElementById('perfilNombre').textContent = nombre || 'Sin nombre';
+      document.getElementById('navNombre').textContent = (nombre||'').split(' ')[0];
       document.getElementById('perfilDni').textContent = 'DNI: ' + dni;
       document.getElementById('perfilHistorial').textContent = historial ? '📋 ' + historial : '';
       document.getElementById('perfilActividad').textContent = act || '—';
       document.getElementById('perfilHorario').textContent = horario || '—';
 
+      // Membresía
+      renderMembresia(ultimoPago);
       // Actividades
       renderActividades(act, horario);
     }
   } catch(e) {
     console.error(e);
   }
+}
+
+function renderMembresia(pago) {
+  const dot    = document.getElementById('mem-dot');
+  const label  = document.getElementById('mem-label');
+  const detalle= document.getElementById('mem-detalle');
+  const monto  = document.getElementById('mem-monto');
+  const vence  = document.getElementById('mem-vence');
+
+  if (!pago) {
+    label.textContent   = 'Sin membresía registrada';
+    detalle.textContent = 'Consultá con tu instructor para registrar tu pago';
+    dot.className = 'mem-dot pendiente';
+    return;
+  }
+
+  const estado = String(pago['Estado']||'').trim();
+  const tipo   = String(pago['Tipo de Membresia']||'').trim();
+  const mont   = parseFloat(pago['Monto']||0);
+  const fecha  = String(pago['Fecha de Pago']||'').trim();
+  const forma  = String(pago['Forma de Pago']||'').trim();
+
+  // Calcular vencimiento según tipo
+  let fechaVence = null;
+  if (fecha) {
+    const d = new Date(fecha);
+    if (tipo === 'Mensual')       { d.setMonth(d.getMonth()+1); fechaVence = d; }
+    else if (tipo === 'Quincenal'){ d.setDate(d.getDate()+15);  fechaVence = d; }
+    else if (tipo === 'Clase suelta'){ fechaVence = new Date(fecha); }
+  }
+
+  const hoy    = new Date();
+  const vencida = fechaVence && fechaVence < hoy;
+
+  if (estado === 'Pendiente') {
+    dot.className     = 'mem-dot pendiente';
+    label.textContent = 'Pago pendiente de validación';
+    detalle.textContent = tipo + ' — ' + forma + ' — ' + fecha;
+  } else if (estado === 'Rechazado') {
+    dot.className     = 'mem-dot vencida';
+    label.textContent = 'Pago rechazado';
+    detalle.textContent = 'Consultá con tu instructor';
+  } else if (vencida) {
+    dot.className     = 'mem-dot vencida';
+    label.textContent = 'Membresía vencida';
+    detalle.textContent = tipo + ' — venció el ' + (fechaVence ? fechaVence.toLocaleDateString('es-AR') : '');
+  } else {
+    dot.className     = 'mem-dot activa';
+    label.textContent = 'Membresía activa — ' + tipo;
+    detalle.textContent = forma + ' — pagado el ' + fecha;
+  }
+
+  monto.textContent = mont > 0 ? '$' + mont.toLocaleString('es-AR') : '';
+  vence.textContent = fechaVence && !vencida
+    ? 'Vence: ' + fechaVence.toLocaleDateString('es-AR')
+    : '';
 }
 
 function renderActividades(act, horario) {
@@ -294,7 +365,6 @@ function renderActividades(act, horario) {
     actividades.push({
       nombre: 'Musculación',
       desc: 'Entrenamiento con pesas y máquinas',
-      horario: horario,
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M4 8h4M16 8h4M4 16h4M16 16h4"/></svg>`
     });
   }
@@ -302,7 +372,6 @@ function renderActividades(act, horario) {
     actividades.push({
       nombre: 'Funcional',
       desc: 'Entrenamiento funcional y cardio',
-      horario: horario,
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6l-3 3M12 13l3 3M9 14H6M18 14h-3"/></svg>`
     });
   }
@@ -310,7 +379,6 @@ function renderActividades(act, horario) {
     actividades.push({
       nombre: 'Localizada',
       desc: 'Ejercicios de tonificación localizada',
-      horario: horario,
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v8M8 12h8"/></svg>`
     });
   }
@@ -318,7 +386,6 @@ function renderActividades(act, horario) {
     actividades.push({
       nombre: act || 'Actividad asignada',
       desc: 'Consultá con tu instructor para más detalles',
-      horario: horario,
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
     });
   }
@@ -327,7 +394,7 @@ function renderActividades(act, horario) {
     '<div class="actividad-item">'
     +'<div class="act-icon">'+a.icon+'</div>'
     +'<div class="act-info"><div class="act-nombre">'+a.nombre+'</div><div class="act-desc">'+a.desc+'</div></div>'
-    +'<div class="act-horario">'+a.horario+'</div>'
+    +''
     +'</div>'
   ).join('');
 }
