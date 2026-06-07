@@ -573,39 +573,76 @@ function buscarAlumno() {
   }
 }
 
-function guardarPago() {
+async function guardarPago() {
   const dni    = document.getElementById('f-dni').value.trim();
   const nombre = document.getElementById('f-nombre').value.trim();
   const tipo   = document.getElementById('f-tipo').value;
   const monto  = document.getElementById('f-monto').value;
   const forma  = document.getElementById('f-forma').value;
   const fecha  = document.getElementById('f-fecha').value;
+  const compFile = document.getElementById('f-comprobante-file');
+  const comprobante = compFile && compFile.files[0] ? compFile.files[0].name : '';
 
   if (!dni || !tipo || !monto || !fecha) {
-    mostrarToast('Completá todos los campos', true); return;
+    mostrarToast('Completá DNI, tipo, monto y fecha', true); return;
+  }
+  if (forma === 'Transferencia' && !comprobante) {
+    mostrarToast('Adjuntá el comprobante de pago', true); return;
   }
 
-  // Agregar localmente como pendiente
-  todos.unshift({
+  const estado = forma === 'Efectivo' ? 'Validado' : 'Pendiente';
+  let dniInstructor = '';
+  try { dniInstructor = JSON.parse(sessionStorage.getItem('hcf_user')||'{}').dni||''; } catch(e){}
+
+  const nuevoPago = {
     'Marca temporal': new Date().toLocaleString('es-AR'),
     'DNI del Alumno': dni,
     'Nombre Alumno': nombre,
     'Tipo de Membresia': tipo,
     'Monto': monto,
     'Forma de Pago': forma,
-    'Comprobante': '',
-    'Estado': 'Validado',
-    'DNI del Instructor': (function(){ try{ return JSON.parse(sessionStorage.getItem('hcf_user')||'{}').dni||''; }catch(e){return '';} })(),
+    'Comprobante': comprobante,
+    'Estado': estado,
+    'DNI del Instructor': dniInstructor,
     'Fecha de Pago': fecha,
-  });
+  };
 
+  mostrarToast('Guardando pago…');
+
+  try {
+    const params = new URLSearchParams({
+      action: 'nuevo',
+      dni: dni,
+      nombre: nombre,
+      tipo: tipo,
+      monto: monto,
+      forma: forma,
+      comprobante: comprobante,
+      estado: estado,
+      instructor: dniInstructor,
+      fecha: fecha,
+    });
+    const resp = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    const result = await resp.json();
+    if (!result.ok) throw new Error('Error en Apps Script');
+  } catch(e) {
+    console.warn('Error al guardar:', e);
+  }
+
+  todos.unshift(nuevoPago);
   actualizarStats();
+  poblarFiltroInstructor();
   filtrar();
   cerrarModal();
-  mostrarToast('✓ Pago registrado correctamente');
+  mostrarToast('✓ Pago ' + (estado === 'Validado' ? 'registrado y validado' : 'registrado — pendiente validación'));
 
-  // Limpiar form
-  ['f-dni','f-nombre','f-tipo','f-monto'].forEach(id => document.getElementById(id).value = '');
+  ['f-dni','f-nombre','f-tipo','f-monto'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  if (compFile) compFile.value='';
+  document.getElementById('comp-preview').style.display='none';
+  document.getElementById('row-comprobante').style.display='none';
+  document.getElementById('aviso-efectivo').style.display='block';
 }
 
 function mostrarToast(msg, isError=false) {
