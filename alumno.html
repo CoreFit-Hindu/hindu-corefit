@@ -120,6 +120,20 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 .act-desc { font-size: 0.78rem; color: var(--text3); margin-top: 2px; }
 .act-horario { font-size: 0.8rem; color: var(--text2); font-weight: 600; white-space: nowrap; }
 
+/* HISTORIAL */
+.historial-tabla { width:100%; border-collapse:collapse; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.historial-tabla thead tr { background:var(--bg3); border-bottom:1px solid var(--border2); }
+.historial-tabla thead th { padding:8px 14px; text-align:left; font-size:0.7rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; }
+.historial-tabla tbody tr { border-bottom:1px solid var(--border); }
+.historial-tabla tbody tr:last-child { border-bottom:none; }
+.historial-tabla tbody td { padding:10px 14px; font-size:0.84rem; color:var(--text2); }
+.h-monto { font-family:var(--font-display); font-weight:700; color:var(--green-light); }
+.h-badge { display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:20px; }
+.h-validado  { background:rgba(76,175,80,0.15);  color:#81c784; }
+.h-pendiente { background:rgba(245,158,11,0.15); color:#fcd34d; }
+.h-rechazado { background:rgba(239,83,80,0.15);  color:#ef9a9a; }
+.h-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
 /* EMPTY */
 .empty-msg { text-align: center; padding: 2rem; color: var(--text3); font-size: 0.88rem; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
 
@@ -187,6 +201,17 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
         <div class="mem-vence" id="mem-vence"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Historial de pagos -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Historial de pagos (últimos 3 meses)
+      </div>
+    </div>
+    <div id="historialPagos"></div>
   </div>
 
   <!-- Rutina -->
@@ -293,12 +318,52 @@ async function init() {
 
       // Membresía
       renderMembresia(ultimoPago);
+      // Historial
+      renderHistorial(misPagos);
       // Actividades
       renderActividades(act, horario);
     }
   } catch(e) {
     console.error(e);
   }
+}
+
+function renderHistorial(pagos) {
+  const cont = document.getElementById('historialPagos');
+  if (!pagos || !pagos.length) {
+    cont.innerHTML = '<div class="empty-msg">No hay pagos registrados en los últimos 3 meses.</div>';
+    return;
+  }
+
+  const hace3meses = new Date();
+  hace3meses.setMonth(hace3meses.getMonth() - 3);
+
+  const recientes = pagos.filter(p => {
+    const f = new Date(p['Fecha de Pago']||'');
+    return f >= hace3meses;
+  });
+
+  if (!recientes.length) {
+    cont.innerHTML = '<div class="empty-msg">No hay pagos en los últimos 3 meses.</div>';
+    return;
+  }
+
+  cont.innerHTML = '<table class="historial-tabla"><thead><tr>' +
+    '<th>Fecha</th><th>Tipo</th><th>Forma de pago</th><th>Monto</th><th>Estado</th>' +
+    '</tr></thead><tbody>' +
+    recientes.map(p => {
+      const estado = (p['Estado']||'Pendiente').trim();
+      const cls = estado.toLowerCase() === 'validado' ? 'h-validado'
+                : estado.toLowerCase() === 'rechazado' ? 'h-rechazado' : 'h-pendiente';
+      return '<tr>' +
+        '<td>' + (p['Fecha de Pago']||'—') + '</td>' +
+        '<td>' + (p['Tipo de Membresia']||'—') + '</td>' +
+        '<td>' + (p['Forma de Pago']||'—') + '</td>' +
+        '<td class="h-monto">$' + parseFloat(p['Monto']||0).toLocaleString('es-AR') + '</td>' +
+        '<td><span class="h-badge ' + cls + '"><span class="h-dot"></span>' + estado + '</span></td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table>';
 }
 
 function renderMembresia(pago) {
