@@ -298,8 +298,12 @@ tbody td.nombre{color:var(--text);font-weight:600;}
         </div>
       </div>
       <div class="form-row" id="row-comprobante" style="display:none">
-        <label>Comprobante (link de imagen o Drive)</label>
-        <input type="text" id="f-comprobante" placeholder="Pegá el link del comprobante…">
+        <label>Subir comprobante</label>
+        <input type="file" id="f-comprobante-file" accept="image/*,.pdf" onchange="previewComprobante(this)" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--font-body);font-size:0.85rem;cursor:pointer;">
+        <div id="comp-preview" style="margin-top:8px;display:none">
+          <img id="comp-img" style="max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--border);">
+          <p id="comp-nombre" style="font-size:0.78rem;color:var(--text3);margin-top:4px;"></p>
+        </div>
       </div>
       <div id="aviso-efectivo" style="font-size:0.82rem;color:#81c784;background:rgba(58,158,63,0.1);border:1px solid rgba(58,158,63,0.2);border-radius:8px;padding:8px 12px;display:block">
         💵 Este pago se sumará al flujo de caja con estado <strong>Validado</strong>
@@ -315,7 +319,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
 <script>
 const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzguEpuBj-VgHy_2qGiux2DfF5E457NfTr7RW7h1_iT4CbQJFD50y5A5PAgtTyFA-gPLQ/exec';
+const APPS_SCRIPT_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/membresias';
 
 let todos = [];
 let alumnos = [];
@@ -523,6 +527,24 @@ function cerrarModal() {
 }
 function cerrarModalClick(e) { if (e.target === document.getElementById('modalBg')) cerrarModal(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+
+function previewComprobante(input) {
+  const preview = document.getElementById('comp-preview');
+  const img     = document.getElementById('comp-img');
+  const nombre  = document.getElementById('comp-nombre');
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    nombre.textContent = file.name;
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; img.style.display='block'; };
+      reader.readAsDataURL(file);
+    } else {
+      img.style.display = 'none';
+    }
+    preview.style.display = 'block';
+  }
+}
 
 function toggleComprobante() {
   const forma = document.getElementById('f-forma').value;
