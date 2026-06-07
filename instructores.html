@@ -439,8 +439,8 @@ main {
 
   <div class="nav-tabs">
     <button class="nav-tab active">Instructores</button>
-    <button class="nav-tab" onclick="alert('Próximamente: Alumnos')">Alumnos</button>
-    <button class="nav-tab" onclick="alert('Próximamente: Membresías')">Membresías</button>
+    <button class="nav-tab" onclick="window.location.href='alumnos.html'">Alumnos</button>
+    <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
     <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
   </div>
 
@@ -565,7 +565,7 @@ function getFoto(r)     { return String(r['Sbir una foto'] || '').trim(); }
 
 function fotoUrl(url) {
   if (!url) return '';
-  const m = url.match(/[?&]id=([\w-]+)/);
+  const m = url.match(/[?&]id=([-\w]+)/);
   if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200';
   return url;
 }
@@ -619,6 +619,15 @@ async function cargarDatos(manual=false) {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     todos = parseCSV(text);
+    console.log('Total filas:', todos.length);
+    if (todos.length > 0) {
+      console.log('Foto fila 1:', getFoto(todos[0]));
+      console.log('Foto URL fila 1:', fotoUrl(getFoto(todos[0])));
+      if (todos.length > 1) {
+        console.log('Foto fila 2:', getFoto(todos[1]));
+        console.log('Foto URL fila 2:', fotoUrl(getFoto(todos[1])));
+      }
+    }
     actualizarStats();
     filtrar();
     const now = new Date();
