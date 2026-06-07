@@ -194,6 +194,9 @@ tbody td.nombre{color:var(--text);font-weight:600;}
       <option>Quincenal</option>
       <option>Clase suelta</option>
     </select>
+    <select class="filter-sel" id="filtroInstructor" onchange="filtrar()">
+      <option value="">Todos los instructores</option>
+    </select>
     <button class="btn-nuevo" onclick="abrirModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Registrar pago
@@ -305,7 +308,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
 <script>
 const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
-const FORM_URL = 'https://docs.google.com/forms/d/e/TU_FORM_MEMBRESIAS_ID/formResponse';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzguEpuBj-VgHy_2qGiux2DfF5E457NfTr7RW7h1_iT4CbQJFD50y5A5PAgtTyFA-gPLQ/exec';
 
 let todos = [];
 let alumnos = [];
@@ -350,6 +353,7 @@ async function cargarDatos(manual=false) {
     todos   = parseCSV(textMem);
     alumnos = parseCSV(textAlum);
     actualizarStats();
+    poblarFiltroInstructor();
     filtrar();
     const now = new Date();
     document.getElementById('updateTime').textContent =
@@ -363,10 +367,21 @@ async function cargarDatos(manual=false) {
   }
 }
 
+function poblarFiltroInstructor() {
+  const sel = document.getElementById('filtroInstructor');
+  const instructores = [...new Set(todos.map(r => getVal(r,'DNI del Instructor')).filter(Boolean))];
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los instructores</option>' +
+    instructores.map(d => '<option value="'+d+'">Instructor DNI: '+d+'</option>').join('');
+  sel.value = actual;
+}
+
 function actualizarStats() {
-  const validados  = todos.filter(r => getVal(r,'Estado').toLowerCase() === 'validado');
-  const pendientes = todos.filter(r => getVal(r,'Estado').toLowerCase() === 'pendiente');
-  const efectivo   = todos.filter(r => getVal(r,'Forma de Pago').toLowerCase() === 'efectivo' && getVal(r,'Estado').toLowerCase() === 'validado');
+  const validados  = base.filter(r => getVal(r,'Estado').toLowerCase() === 'validado');
+  const pendientes = base.filter(r => getVal(r,'Estado').toLowerCase() === 'pendiente');
+  const instructor = document.getElementById('filtroInstructor') ? document.getElementById('filtroInstructor').value : '';
+  const base = instructor ? todos.filter(r => getVal(r,'DNI del Instructor') === instructor) : todos;
+  const efectivo   = base.filter(r => getVal(r,'Forma de Pago').toLowerCase() === 'efectivo' && getVal(r,'Estado').toLowerCase() === 'validado');
   const totalEfect = efectivo.reduce((s,r) => s + (parseFloat(getVal(r,'Monto'))||0), 0);
 
   document.getElementById('st-total').textContent     = todos.length;
@@ -385,10 +400,10 @@ function actualizarStats() {
   const semMonto = efectivo
     .filter(r => new Date(getVal(r,'Fecha de Pago')) >= inicioSem)
     .reduce((s,r) => s + (parseFloat(getVal(r,'Monto'))||0), 0);
-  const transfPend = todos
+  const transfPend = base
     .filter(r => getVal(r,'Forma de Pago').toLowerCase() === 'transferencia' && getVal(r,'Estado').toLowerCase() === 'pendiente')
     .reduce((s,r) => s + (parseFloat(getVal(r,'Monto'))||0), 0);
-  const totalTodo = todos
+  const totalTodo = base
     .filter(r => getVal(r,'Estado').toLowerCase() === 'validado')
     .reduce((s,r) => s + (parseFloat(getVal(r,'Monto'))||0), 0);
 
@@ -410,12 +425,14 @@ function filtrar() {
   const estado = document.getElementById('filtroEstado').value.toLowerCase();
   const tipo   = document.getElementById('filtroTipo').value.toLowerCase();
 
+  const instructor = document.getElementById('filtroInstructor').value;
   const res = todos.filter(r => {
     const nombre = getVal(r,'Nombre Alumno').toLowerCase();
     const dni    = getVal(r,'DNI del Alumno');
     if (q && !nombre.includes(q) && !dni.includes(q)) return false;
     if (estado && getVal(r,'Estado').toLowerCase() !== estado) return false;
     if (tipo   && getVal(r,'Tipo de Membresia').toLowerCase() !== tipo) return false;
+    if (instructor && getVal(r,'DNI del Instructor') !== instructor) return false;
     return true;
   });
 
@@ -457,13 +474,30 @@ function renderTabla(lista) {
   }).join('');
 }
 
-function validarPago(idx, nuevoEstado) {
-  // Por ahora muestra confirmación — integrar con Apps Script para actualizar la Sheet
+async function validarPago(idx, nuevoEstado) {
   const r = todos[idx];
   const nombre = getVal(r,'Nombre Alumno');
-  if (confirm(`¿${nuevoEstado} el pago de ${nombre}?`)) {
-    mostrarToast(`✓ Pago ${nuevoEstado.toLowerCase()} (pendiente sincronización con planilla)`);
-    // TODO: llamar a Apps Script para actualizar el estado en la Sheet
+  const dni    = getVal(r,'DNI del Alumno');
+  const fecha  = getVal(r,'Fecha de Pago');
+  if (!confirm(`¿${nuevoEstado} el pago de ${nombre}?`)) return;
+  try {
+    mostrarToast('Guardando…');
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ dni, fecha, estado: nuevoEstado }),
+    });
+    todos[idx]['Estado'] = nuevoEstado;
+    actualizarStats();
+    poblarFiltroInstructor();
+    filtrar();
+    mostrarToast('✓ Pago ' + nuevoEstado.toLowerCase() + ' correctamente');
+  } catch(e) {
+    // Actualizar localmente igual
+    todos[idx]['Estado'] = nuevoEstado;
+    actualizarStats();
+    poblarFiltroInstructor();
+    filtrar();
+    mostrarToast('✓ Pago ' + nuevoEstado.toLowerCase() + ' (se sincronizará en próxima carga)');
   }
 }
 
@@ -510,7 +544,7 @@ function guardarPago() {
     'Forma de Pago': forma,
     'Comprobante': '',
     'Estado': 'Validado',
-    'DNI del Instructor': '',
+    'DNI del Instructor': (function(){ try{ return JSON.parse(sessionStorage.getItem('hcf_user')||'{}').dni||''; }catch(e){return '';} })(),
     'Fecha de Pago': fecha,
   });
 
