@@ -120,6 +120,19 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 .act-desc { font-size: 0.78rem; color: var(--text3); margin-top: 2px; }
 .act-horario { font-size: 0.8rem; color: var(--text2); font-weight: 600; white-space: nowrap; }
 
+/* ASISTENCIA ALUMNO */
+.asist-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+.asist-dia { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; }
+.asist-dia.presente { border-color:rgba(76,175,80,0.3); background:rgba(76,175,80,0.05); }
+.asist-fecha { font-size:0.72rem; color:var(--text3); margin-bottom:4px; }
+.asist-act { font-size:0.82rem; font-weight:600; color:var(--text); margin-bottom:2px; }
+.asist-turno { font-size:0.72rem; color:var(--text2); }
+.asist-hora { font-size:0.68rem; color:var(--text3); margin-top:4px; }
+.asist-badge { display:inline-block; font-size:0.65rem; font-weight:700; padding:2px 6px; border-radius:10px; background:rgba(76,175,80,0.15); color:#81c784; margin-top:6px; }
+.asist-stats { display:flex; gap:16px; margin-bottom:12px; }
+.asist-stat { font-size:0.82rem; color:var(--text2); }
+.asist-stat strong { font-family:var(--font-display); font-size:1.2rem; color:var(--green-light); margin-right:4px; }
+
 /* HISTORIAL */
 .historial-tabla { width:100%; border-collapse:collapse; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
 .historial-tabla thead tr { background:var(--bg3); border-bottom:1px solid var(--border2); }
@@ -227,21 +240,26 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
     </div>
   </div>
 
-  <!-- Actividades -->
+  <!-- Asistencia -->
   <div class="section">
     <div class="section-header">
       <div class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Mis Actividades
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Mi Asistencia
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="verAsistencia('semana')" id="btn-semana" style="background:rgba(58,158,63,0.15);border:1px solid rgba(58,158,63,0.3);border-radius:6px;color:#81c784;font-size:0.78rem;font-family:var(--font-body);padding:4px 12px;cursor:pointer;">Esta semana</button>
+        <button onclick="verAsistencia('mes')" id="btn-mes" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:0.78rem;font-family:var(--font-body);padding:4px 12px;cursor:pointer;">Este mes</button>
       </div>
     </div>
-    <div class="actividades-list" id="actividadesList"></div>
+    <div id="asistenciaAlumno"></div>
   </div>
 
 </main>
 
 <script>
-const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_ALUMNOS     = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_ASISTENCIA2 = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/asistencia';
 const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 
 function iniciales(n) {
@@ -280,12 +298,14 @@ async function init() {
 
   // Cargar datos del alumno desde la sheet
   try {
-    const [respAlum, respMem] = await Promise.all([
+    const [respAlum, respMem, respAsist] = await Promise.all([
       fetch(WORKER_ALUMNOS),
-      fetch(WORKER_MEMBRESIAS)
+      fetch(WORKER_MEMBRESIAS),
+      fetch(WORKER_ASISTENCIA2)
     ]);
-    const rows    = parseCSV(await respAlum.text());
-    const pagos   = parseCSV(await respMem.text());
+    const rows       = parseCSV(await respAlum.text());
+    const pagos      = parseCSV(await respMem.text());
+    const asistencias = parseCSV(await respAsist.text());
     const alumno  = rows.find(r => String(r['DNI']||'').trim() === String(user.dni||'').trim());
     // Buscar último pago del alumno
     const misPagos = pagos
@@ -320,8 +340,10 @@ async function init() {
       renderMembresia(ultimoPago);
       // Historial
       renderHistorial(misPagos);
-      // Actividades
-      renderActividades(act, horario);
+      // Asistencia del alumno
+      const misAsistencias = asistencias.filter(a => String(a['DNI Alumno']||'').trim() === String(user.dni||'').trim());
+      window._misAsistencias = misAsistencias;
+      verAsistencia('semana');
     }
   } catch(e) {
     console.error(e);
@@ -420,6 +442,59 @@ function renderMembresia(pago) {
   vence.textContent = fechaVence && !vencida
     ? 'Vence: ' + fechaVence.toLocaleDateString('es-AR')
     : '';
+}
+
+function verAsistencia(periodo) {
+  // Actualizar botones
+  document.getElementById('btn-semana').style.background = periodo==='semana'?'rgba(58,158,63,0.15)':'var(--surface)';
+  document.getElementById('btn-semana').style.color = periodo==='semana'?'#81c784':'var(--text2)';
+  document.getElementById('btn-mes').style.background = periodo==='mes'?'rgba(58,158,63,0.15)':'var(--surface)';
+  document.getElementById('btn-mes').style.color = periodo==='mes'?'#81c784':'var(--text2)';
+
+  const todas = window._misAsistencias || [];
+  const ahora = new Date();
+  let desde;
+  if (periodo === 'semana') {
+    desde = new Date(ahora); desde.setDate(ahora.getDate() - 7);
+  } else {
+    desde = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+  }
+
+  const parseFecha = f => {
+    const p = String(f||'').split('/');
+    if (p.length===3) return new Date(p[2],p[1]-1,p[0]);
+    return new Date(f);
+  };
+
+  const filtradas = todas.filter(a => parseFecha(a['Fecha']) >= desde);
+  renderAsistenciaAlumno(filtradas, periodo);
+}
+
+function renderAsistenciaAlumno(lista, periodo) {
+  const cont = document.getElementById('asistenciaAlumno');
+  if (!lista.length) {
+    cont.innerHTML = '<div class="empty-msg">No tenés asistencias registradas ' + (periodo==='semana'?'esta semana':'este mes') + '.</div>';
+    return;
+  }
+
+  // Calcular stats
+  const dias = new Set(lista.map(a => a['Fecha'])).size;
+  const clases = lista.length;
+
+  cont.innerHTML = '<div class="asist-stats">' +
+    '<div class="asist-stat"><strong>' + dias + '</strong>días asistidos</div>' +
+    '<div class="asist-stat"><strong>' + clases + '</strong>clases</div>' +
+    '</div>' +
+    '<div class="asist-grid">' +
+    lista.map(a => '<div class="asist-dia presente">' +
+      '<div class="asist-fecha">' + (a['Fecha']||'—') + '</div>' +
+      '<div class="asist-act">' + (a['Actividad']||'—') + '</div>' +
+      '<div class="asist-turno">Turno ' + (a['Turno']||'—') + '</div>' +
+      '<div class="asist-hora">' + (a['Hora']||'') + '</div>' +
+      '<span class="asist-badge">✓ Presente</span>' +
+      '</div>'
+    ).join('') +
+    '</div>';
 }
 
 function renderActividades(act, horario) {
