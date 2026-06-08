@@ -553,7 +553,7 @@ main {
 const WORKER_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
 let todos = [];
 
-function getNombre(r)   { return String(r['Nombre y Apellido'] || '').trim(); }
+function getNombre(r)   { return String(r['Nmbre y Apellido'] || r['Nombre y Apellido'] || '').trim(); }
 function getDNI(r)      { return String(r['DNI'] || '').trim(); }
 function getTel(r)      { return String(r['Telefono'] || r['Teléfono'] || '').trim(); }
 function getDomicilio(r){ return String(r['Domicilio'] || '').trim(); }
