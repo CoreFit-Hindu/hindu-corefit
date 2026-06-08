@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hindú CoreFit — Asistencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#3a9e3f;--green-light:#4caf50;--green-glow:rgba(58,158,63,0.3);
+  --red:#cc2222;--amber:#f59e0b;
+  --bg:#0d1117;--bg2:#131920;--bg3:#1a2230;
+  --surface:rgba(255,255,255,0.055);--surface2:rgba(255,255,255,0.09);
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.16);
+  --text:#e4e8f0;--text2:#8a95a8;--text3:#5a6478;
+  --font-display:'Rajdhani',sans-serif;--font-body:'Nunito',sans-serif;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;}
+
+nav{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:58px;}
+.nav-brand{font-family:var(--font-display);font-size:1.35rem;font-weight:700;letter-spacing:0.03em;display:flex;align-items:center;gap:10px;}
+.nav-shield{width:28px;height:32px;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{background:none;border:none;font-family:var(--font-body);font-size:0.82rem;font-weight:600;color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.18s;}
+.nav-tab:hover{color:var(--text);background:var(--surface);}
+.nav-tab.active{color:var(--green-light);background:rgba(58,158,63,0.12);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.btn-sync{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:0.8rem;font-family:var(--font-body);padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.18s;}
+.btn-sync:hover{border-color:var(--green);color:var(--green-light);}
+.btn-sync svg{width:14px;height:14px;}
+.btn-sync.spinning svg{animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:2rem;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;animation:fadeUp 0.4s ease both;}
+.stat-label{font-size:0.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.stat-val{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--text);line-height:1;}
+.stat-val.green{color:var(--green-light);}
+.stat-val.red{color:#ef5350;}
+
+/* PANEL TOMAR ASISTENCIA */
+.tomar-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;animation:fadeUp 0.4s ease both;}
+.tomar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px;}
+.tomar-header h2{font-family:var(--font-display);font-size:1.15rem;font-weight:700;}
+.tomar-fecha{font-size:0.85rem;color:var(--text2);}
+.tomar-filtros{display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.filter-sel{height:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-family:var(--font-body);font-size:0.85rem;color:var(--text2);outline:none;cursor:pointer;transition:border-color 0.18s;}
+.filter-sel:focus{border-color:var(--green);}
+.filter-sel option{background:#1a2230;}
+
+/* BUSCADOR ALUMNO */
+.buscar-wrap{position:relative;flex:1;min-width:220px;}
+.buscar-wrap input{width:100%;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 14px 0 38px;font-family:var(--font-body);font-size:0.88rem;color:var(--text);outline:none;transition:border-color 0.18s,box-shadow 0.18s;}
+.buscar-wrap input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow);}
+.buscar-wrap input::placeholder{color:var(--text3);}
+.buscar-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text3);pointer-events:none;}
+.sugerencias{position:absolute;top:44px;left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);z-index:100;max-height:200px;overflow-y:auto;display:none;}
+.sugerencias.open{display:block;}
+.sugerencia-item{padding:10px 14px;font-size:0.88rem;color:var(--text2);cursor:pointer;transition:background 0.15s;display:flex;justify-content:space-between;align-items:center;}
+.sugerencia-item:hover{background:var(--surface2);color:var(--text);}
+.sugerencia-dni{font-size:0.75rem;color:var(--text3);}
+
+/* LISTA DE ASISTENCIA DEL DÍA */
+.asistencia-lista{display:flex;flex-direction:column;gap:8px;}
+.asistencia-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:fadeUp 0.2s ease both;}
+.asistencia-item.presente{border-color:rgba(76,175,80,0.3);}
+.asistencia-nombre{font-weight:600;font-size:0.9rem;color:var(--text);}
+.asistencia-meta{font-size:0.75rem;color:var(--text3);}
+.asistencia-badge{font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(76,175,80,0.15);color:#81c784;white-space:nowrap;}
+.asistencia-hora{font-size:0.78rem;color:var(--text3);white-space:nowrap;}
+
+/* HISTORIAL */
+.historial-section{margin-top:2rem;}
+.section-title{font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.section-title svg{width:18px;height:18px;color:var(--green-light);}
+
+.toolbar{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text3);pointer-events:none;}
+.search-wrap input{width:100%;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 14px 0 38px;font-family:var(--font-body);font-size:0.88rem;color:var(--text);outline:none;}
+.search-wrap input::placeholder{color:var(--text3);}
+.search-wrap input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow);}
+
+.tabla-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--bg3);border-bottom:1px solid var(--border2);}
+thead th{padding:10px 14px;text-align:left;font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--surface);}
+tbody td{padding:10px 14px;font-size:0.85rem;color:var(--text2);}
+tbody td.nombre{color:var(--text);font-weight:600;}
+.pres-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(76,175,80,0.15);color:#81c784;}
+.pres-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+.state-msg{text-align:center;padding:3rem 0;color:var(--text3);font-size:0.88rem;}
+.loader{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@media(max-width:640px){.stats-bar{grid-template-columns:repeat(2,1fr);}.nav-tabs{display:none;}main{padding:1.25rem 1rem 3rem;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <svg class="nav-shield" viewBox="0 0 28 32" fill="none">
+      <path d="M14 1L1 6.5V17c0 7.5 5.5 13 13 16 7.5-3 13-8.5 13-16V6.5L14 1z" fill="#2d6e32"/>
+      <text x="14" y="16" text-anchor="middle" font-family="Rajdhani,sans-serif" font-weight="700" font-size="6" fill="white" letter-spacing="0.5">HINDÚ</text>
+      <rect x="5" y="18" width="18" height="1.5" fill="white" opacity="0.8"/>
+      <rect x="5" y="21" width="18" height="1.5" fill="white" opacity="0.5"/>
+    </svg>
+    HINDÚ <span style="color:var(--text2);font-weight:500;margin:0 4px">—</span> CoreFit
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="location.href='instructores.html'">Instructores</button>
+    <button class="nav-tab" onclick="location.href='alumnos.html'">Alumnos</button>
+    <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
+    <button class="nav-tab active">Asistencia</button>
+    <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
+  </div>
+  <div class="nav-right">
+    <button class="btn-sync" id="btnSync" onclick="cargarHistorial(true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Actualizar
+    </button>
+  </div>
+</nav>
+
+<main>
+
+  <div class="stats-bar">
+    <div class="stat-card" style="animation-delay:0.05s">
+      <div class="stat-label">Presentes hoy</div>
+      <div class="stat-val green" id="st-hoy">—</div>
+    </div>
+    <div class="stat-card" style="animation-delay:0.1s">
+      <div class="stat-label">Esta semana</div>
+      <div class="stat-val green" id="st-semana">—</div>
+    </div>
+    <div class="stat-card" style="animation-delay:0.15s">
+      <div class="stat-label">Este mes</div>
+      <div class="stat-val green" id="st-mes">—</div>
+    </div>
+    <div class="stat-card" style="animation-delay:0.2s">
+      <div class="stat-label">Total registros</div>
+      <div class="stat-val" id="st-total">—</div>
+    </div>
+  </div>
+
+  <!-- Tomar asistencia -->
+  <div class="tomar-card">
+    <div class="tomar-header">
+      <h2>📋 Tomar asistencia</h2>
+      <span class="tomar-fecha" id="fechaHoy"></span>
+    </div>
+    <div class="tomar-filtros">
+      <select class="filter-sel" id="sel-actividad">
+        <option value="">Actividad…</option>
+        <option>Musculación</option>
+        <option>Funcional</option>
+        <option>Localizada</option>
+        <option>Otra</option>
+      </select>
+      <select class="filter-sel" id="sel-turno">
+        <option value="">Turno…</option>
+        <option>Mañana</option>
+        <option>Tarde</option>
+      </select>
+      <div class="buscar-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="buscarAlumno" placeholder="Escribí el nombre del alumno…" oninput="buscarAlumnoFn()" autocomplete="off">
+        <div class="sugerencias" id="sugerencias"></div>
+      </div>
+    </div>
+
+    <div class="asistencia-lista" id="asistenciaHoy">
+      <div class="state-msg" style="padding:1.5rem">Buscá un alumno para registrar su asistencia</div>
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div class="historial-section">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Historial de asistencia
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchHist" placeholder="Buscar por nombre o DNI…" oninput="filtrarHistorial()">
+      </div>
+      <select class="filter-sel" id="filtroActHist" onchange="filtrarHistorial()">
+        <option value="">Todas las actividades</option>
+        <option>Musculación</option>
+        <option>Funcional</option>
+        <option>Localizada</option>
+        <option>Otra</option>
+      </select>
+      <select class="filter-sel" id="filtroTurnoHist" onchange="filtrarHistorial()">
+        <option value="">Todos los turnos</option>
+        <option>Mañana</option>
+        <option>Tarde</option>
+      </select>
+      <input type="date" id="filtroFecha" class="filter-sel" onchange="filtrarHistorial()" style="width:150px">
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Alumno</th>
+            <th>DNI</th>
+            <th>Actividad</th>
+            <th>Turno</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="historialBody">
+          <tr><td colspan="7"><div class="state-msg"><div class="loader"></div>Cargando historial…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const WORKER_ALUMNOS   = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_ASISTENCIA= 'https://hindu-corefit-proxy.edu-gonza.workers.dev/asistencia';
+const API_ASISTENCIA   = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/asistencia';
+
+let alumnos    = [];
+let historial  = [];
+let asistenciaHoy = []; // registros del día actual
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const header = parseLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseLine(line);
+    const obj = {};
+    header.forEach((h,i) => obj[h.trim()] = String(vals[i]||'').trim());
+    return obj;
+  }).filter(r => Object.values(r).some(v=>v));
+}
+function parseLine(line) {
+  const result=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){result.push(cur);cur='';}else cur+=c;}
+  result.push(cur);
+  return result.map(s=>s.trim().replace(/^"|"$/g,''));
+}
+
+function fechaHoy() {
+  const d = new Date();
+  return d.toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+function fechaHoyCorta() {
+  const d = new Date();
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+}
+
+async function init() {
+  document.getElementById('fechaHoy').textContent = fechaHoy();
+
+  try {
+    const [respAlum, respAsist] = await Promise.all([
+      fetch(WORKER_ALUMNOS),
+      fetch(WORKER_ASISTENCIA)
+    ]);
+    alumnos   = parseCSV(await respAlum.text());
+    historial = parseCSV(await respAsist.text());
+
+    // Filtrar asistencia de hoy
+    const hoy = fechaHoyCorta();
+    asistenciaHoy = historial.filter(r => String(r['Fecha']||'').trim() === hoy);
+
+    actualizarStats();
+    renderAsistenciaHoy();
+    filtrarHistorial();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function cargarHistorial(manual=false) {
+  const btn = document.getElementById('btnSync');
+  btn.classList.add('spinning');
+  try {
+    const resp = await fetch(WORKER_ASISTENCIA);
+    historial = parseCSV(await resp.text());
+    const hoy = fechaHoyCorta();
+    asistenciaHoy = historial.filter(r => String(r['Fecha']||'').trim() === hoy);
+    actualizarStats();
+    renderAsistenciaHoy();
+    filtrarHistorial();
+    if (manual) mostrarToast('✓ Datos actualizados');
+  } catch(e) {
+    mostrarToast('Error al actualizar', true);
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+function actualizarStats() {
+  const hoy    = fechaHoyCorta();
+  const ahora  = new Date();
+  const inicioSem = new Date(ahora); inicioSem.setDate(ahora.getDate() - ahora.getDay());
+  const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+
+  const parseFecha = f => {
+    const p = String(f||'').split('/');
+    if (p.length === 3) return new Date(p[2], p[1]-1, p[0]);
+    return new Date(f);
+  };
+
+  document.getElementById('st-hoy').textContent    = historial.filter(r=>String(r['Fecha']||'').trim()===hoy).length;
+  document.getElementById('st-semana').textContent  = historial.filter(r=>parseFecha(r['Fecha'])>=inicioSem).length;
+  document.getElementById('st-mes').textContent     = historial.filter(r=>parseFecha(r['Fecha'])>=inicioMes).length;
+  document.getElementById('st-total').textContent   = historial.length;
+}
+
+function renderAsistenciaHoy() {
+  const cont = document.getElementById('asistenciaHoy');
+  if (!asistenciaHoy.length) {
+    cont.innerHTML = '<div class="state-msg" style="padding:1.5rem">Buscá un alumno para registrar su asistencia</div>';
+    return;
+  }
+  cont.innerHTML = asistenciaHoy.map((r,i) => `
+    <div class="asistencia-item presente" style="animation-delay:${i*0.05}s">
+      <div>
+        <div class="asistencia-nombre">${r['Nombre Alumno']||'—'}</div>
+        <div class="asistencia-meta">DNI: ${r['DNI Alumno']||'—'} · ${r['Actividad']||'—'} · Turno ${r['Turno']||'—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="asistencia-hora">${r['Hora']||'—'}</span>
+        <span class="asistencia-badge">✓ Presente</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Buscador de alumnos ──
+function buscarAlumnoFn() {
+  const q = document.getElementById('buscarAlumno').value.toLowerCase().trim();
+  const sug = document.getElementById('sugerencias');
+  if (!q || q.length < 2) { sug.classList.remove('open'); return; }
+
+  const res = alumnos.filter(a => {
+    const nombre = String(a['Nmbre y Apellido']||a['Nombre y Apellido']||'').toLowerCase();
+    return nombre.includes(q);
+  }).slice(0, 8);
+
+  if (!res.length) { sug.classList.remove('open'); return; }
+
+  sug.innerHTML = res.map(a => {
+    const nombre = String(a['Nmbre y Apellido']||a['Nombre y Apellido']||'').trim();
+    const dni    = String(a['DNI']||'').trim();
+    return `<div class="sugerencia-item" onclick="seleccionarAlumno('${nombre}','${dni}')">
+      <span>${nombre}</span>
+      <span class="sugerencia-dni">DNI: ${dni}</span>
+    </div>`;
+  }).join('');
+  sug.classList.add('open');
+}
+
+function seleccionarAlumno(nombre, dni) {
+  document.getElementById('buscarAlumno').value = nombre;
+  document.getElementById('sugerencias').classList.remove('open');
+  registrarAsistencia(nombre, dni);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.buscar-wrap')) {
+    document.getElementById('sugerencias').classList.remove('open');
+  }
+});
+
+async function registrarAsistencia(nombre, dni) {
+  const actividad = document.getElementById('sel-actividad').value;
+  const turno     = document.getElementById('sel-turno').value;
+
+  if (!actividad || !turno) {
+    mostrarToast('Seleccioná actividad y turno primero', true); return;
+  }
+
+  // Verificar si ya está registrado hoy con mismo turno y actividad
+  const yaRegistrado = asistenciaHoy.find(r =>
+    String(r['DNI Alumno']||'').trim() === dni &&
+    r['Actividad'] === actividad &&
+    r['Turno'] === turno
+  );
+
+  if (yaRegistrado) {
+    mostrarToast(`${nombre} ya tiene asistencia registrada en ${actividad} - ${turno}`, true);
+    document.getElementById('buscarAlumno').value = '';
+    return;
+  }
+
+  let dniInstructor = '';
+  try { dniInstructor = JSON.parse(sessionStorage.getItem('hcf_user')||'{}').dni||''; } catch(e){}
+
+  mostrarToast('Registrando asistencia…');
+
+  try {
+    const params = new URLSearchParams({
+      action: 'registrar',
+      dni: dni,
+      nombre: nombre,
+      actividad: actividad,
+      turno: turno,
+      instructor: dniInstructor,
+    });
+    fetch(API_ASISTENCIA + '?' + params.toString()).catch(e => console.warn(e));
+  } catch(e) { console.warn(e); }
+
+  // Agregar localmente
+  const ahora = new Date();
+  const hora  = ('0'+ahora.getHours()).slice(-2)+':'+('0'+ahora.getMinutes()).slice(-2);
+  const nuevo = {
+    'Fecha': fechaHoyCorta(),
+    'Hora': hora,
+    'DNI Alumno': dni,
+    'Nombre Alumno': nombre,
+    'Actividad': actividad,
+    'Turno': turno,
+    'DNI Instructor': dniInstructor,
+  };
+  asistenciaHoy.unshift(nuevo);
+  historial.unshift(nuevo);
+  actualizarStats();
+  renderAsistenciaHoy();
+  filtrarHistorial();
+  document.getElementById('buscarAlumno').value = '';
+  mostrarToast(`✓ Asistencia registrada: ${nombre}`);
+}
+
+// ── Historial ──
+function filtrarHistorial() {
+  const q      = document.getElementById('searchHist').value.toLowerCase();
+  const act    = document.getElementById('filtroActHist').value;
+  const turno  = document.getElementById('filtroTurnoHist').value;
+  const fecha  = document.getElementById('filtroFecha').value;
+
+  const res = historial.filter(r => {
+    const nombre = String(r['Nombre Alumno']||'').toLowerCase();
+    const dni    = String(r['DNI Alumno']||'');
+    if (q && !nombre.includes(q) && !dni.includes(q)) return false;
+    if (act   && r['Actividad'] !== act)   return false;
+    if (turno && r['Turno']     !== turno) return false;
+    if (fecha) {
+      // fecha del input viene como YYYY-MM-DD, convertir a dd/mm/yyyy para comparar
+      const [y,m,d] = fecha.split('-');
+      const fechaFormato = d+'/'+m+'/'+y;
+      if (String(r['Fecha']||'').trim() !== fechaFormato) return false;
+    }
+    return true;
+  });
+
+  renderHistorial(res);
+}
+
+function renderHistorial(lista) {
+  const tbody = document.getElementById('historialBody');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="state-msg">No se encontraron registros.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(r => `
+    <tr>
+      <td>${r['Fecha']||'—'}</td>
+      <td>${r['Hora']||'—'}</td>
+      <td class="nombre">${r['Nombre Alumno']||'—'}</td>
+      <td>${r['DNI Alumno']||'—'}</td>
+      <td>${r['Actividad']||'—'}</td>
+      <td>${r['Turno']||'—'}</td>
+      <td><span class="pres-badge"><span class="pres-dot"></span>Presente</span></td>
+    </tr>
+  `).join('');
+}
+
+function mostrarToast(msg, isError=false) {
+  let t = document.getElementById('toast-gl');
+  if (!t) {
+    t = document.createElement('div'); t.id='toast-gl';
+    t.style.cssText='position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);padding:10px 20px;border-radius:10px;font-size:.85rem;opacity:0;pointer-events:none;transition:all .3s;z-index:999;white-space:nowrap;font-family:var(--font-body)';
+    document.body.appendChild(t);
+  }
+  t.style.background  = isError?'#2c1e1e':'#1e2c1e';
+  t.style.border      = isError?'1px solid #cc2222':'1px solid var(--green)';
+  t.style.color       = isError?'#ef9a9a':'#a5d6a7';
+  t.textContent=msg;
+  t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(10px)';},3000);
+}
+
+init();
+</script>
+</body>
+</html>
