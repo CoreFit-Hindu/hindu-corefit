@@ -466,9 +466,14 @@ function verAsistencia(periodo) {
   }
 
   const parseFecha = f => {
-    const p = String(f||'').split('/');
-    if (p.length===3) return new Date(p[2],p[1]-1,p[0]);
-    return new Date(f);
+    const s = String(f||'').trim();
+    // formato dd/mm/yyyy
+    const p = s.split('/');
+    if (p.length===3) {
+      const d=parseInt(p[0]), m=parseInt(p[1])-1, y=parseInt(p[2]);
+      return new Date(y, m, d);
+    }
+    return new Date(s);
   };
 
   const filtradas = todas.filter(a => parseFecha(a['Fecha']) >= desde);
