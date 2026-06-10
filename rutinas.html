@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hindú CoreFit — Rutinas</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#3a9e3f;--green-light:#4caf50;--green-glow:rgba(58,158,63,0.3);
+  --red:#cc2222;--amber:#f59e0b;--blue:#2196f3;
+  --bg:#0d1117;--bg2:#131920;--bg3:#1a2230;
+  --surface:rgba(255,255,255,0.055);--surface2:rgba(255,255,255,0.09);
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.16);
+  --text:#e4e8f0;--text2:#8a95a8;--text3:#5a6478;
+  --font-display:'Rajdhani',sans-serif;--font-body:'Nunito',sans-serif;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:50;background:rgba(13,17,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:58px;}
+.nav-brand{font-family:var(--font-display);font-size:1.35rem;font-weight:700;letter-spacing:0.03em;display:flex;align-items:center;gap:10px;}
+.nav-shield{width:28px;height:32px;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{background:none;border:none;font-family:var(--font-body);font-size:0.82rem;font-weight:600;color:var(--text2);padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.18s;}
+.nav-tab:hover{color:var(--text);background:var(--surface);}
+.nav-tab.active{color:var(--green-light);background:rgba(58,158,63,0.12);}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:640px){.nav-tabs{display:none;}}
+
+main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+
+/* PASO 1 - SELECCIONAR ALUMNO */
+.step-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;animation:fadeUp 0.4s ease both;}
+.step-title{font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+.buscar-wrap{position:relative;}
+.buscar-wrap input{width:100%;height:44px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 14px 0 42px;font-family:var(--font-body);font-size:0.95rem;color:var(--text);outline:none;transition:border-color 0.18s,box-shadow 0.18s;}
+.buscar-wrap input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow);}
+.buscar-wrap input::placeholder{color:var(--text3);}
+.buscar-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text3);pointer-events:none;}
+.sugerencias{position:absolute;top:48px;left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);z-index:100;max-height:220px;overflow-y:auto;display:none;}
+.sugerencias.open{display:block;}
+.sug-item{padding:10px 16px;font-size:0.88rem;color:var(--text2);cursor:pointer;transition:background 0.15s;display:flex;justify-content:space-between;align-items:center;}
+.sug-item:hover{background:var(--surface2);color:var(--text);}
+.sug-dni{font-size:0.75rem;color:var(--text3);}
+
+/* ALUMNO SELECCIONADO */
+.alumno-header{background:var(--bg2);border:1px solid rgba(58,158,63,0.3);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;animation:fadeUp 0.3s ease both;}
+.alumno-header h2{font-family:var(--font-display);font-size:1.4rem;font-weight:700;}
+.alumno-header p{font-size:0.85rem;color:var(--text2);}
+.btn-cambiar{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:0.8rem;font-family:var(--font-body);padding:6px 14px;cursor:pointer;transition:all 0.18s;}
+.btn-cambiar:hover{border-color:var(--red);color:#ef9a9a;}
+
+/* DÍAS TABS */
+.dias-wrap{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.dia-tab{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;cursor:pointer;transition:all 0.18s;text-align:center;min-width:110px;flex:1;}
+.dia-tab:hover{border-color:var(--border2);}
+.dia-tab.active{border-color:var(--green);background:rgba(58,158,63,0.08);}
+.dia-tab.tiene-rutina{border-color:rgba(58,158,63,0.4);}
+.dia-tab.descanso{border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.04);}
+.dia-nombre{font-family:var(--font-display);font-size:0.95rem;font-weight:700;margin-bottom:2px;}
+.dia-tab.active .dia-nombre{color:var(--green-light);}
+.dia-tab.descanso .dia-nombre{color:var(--amber);}
+.dia-grupo{font-size:0.7rem;color:var(--text3);}
+.dia-tab.tiene-rutina .dia-grupo{color:#81c784;}
+.dia-icono{font-size:1rem;margin-bottom:4px;}
+
+/* EDITOR DE RUTINA */
+.rutina-editor{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem;animation:fadeUp 0.3s ease both;}
+.editor-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.editor-header h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;}
+.grupo-sel{height:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-family:var(--font-body);font-size:0.85rem;color:var(--text2);outline:none;cursor:pointer;}
+.grupo-sel option{background:#1a2230;}
+.btn-descanso{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-sm);color:var(--amber);font-size:0.8rem;font-family:var(--font-body);padding:6px 14px;cursor:pointer;transition:all 0.18s;}
+.btn-descanso:hover{background:rgba(245,158,11,0.2);}
+
+/* TABLA EJERCICIOS */
+.tabla-ejercicios{width:100%;border-collapse:collapse;}
+.tabla-ejercicios thead tr{background:var(--bg3);border-bottom:1px solid var(--border2);}
+.tabla-ejercicios thead th{padding:10px 12px;text-align:left;font-size:0.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;}
+.tabla-ejercicios tbody tr{border-bottom:1px solid var(--border);}
+.tabla-ejercicios tbody tr:last-child{border-bottom:none;}
+.tabla-ejercicios tbody td{padding:8px 12px;vertical-align:middle;}
+
+.input-ej{width:100%;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-family:var(--font-body);font-size:0.85rem;color:var(--text);outline:none;transition:border-color 0.18s;}
+.input-ej:focus{border-color:var(--green);}
+.input-ej::placeholder{color:var(--text3);}
+.input-num{width:70px;text-align:center;}
+.input-ref{width:100%;}
+
+.btn-ref{background:rgba(33,150,243,0.1);border:1px solid rgba(33,150,243,0.3);border-radius:6px;color:#90caf9;font-size:0.75rem;font-family:var(--font-body);padding:5px 10px;cursor:pointer;white-space:nowrap;transition:all 0.18s;}
+.btn-ref:hover{background:rgba(33,150,243,0.2);}
+.ref-preview{width:48px;height:36px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer;}
+
+.btn-del-row{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:4px;transition:color 0.18s;}
+.btn-del-row:hover{color:#ef9a9a;}
+
+.add-ejercicio-row{padding:12px 1.5rem;border-top:1px solid var(--border);}
+.btn-add-ej{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:0.85rem;font-family:var(--font-body);padding:8px 16px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.18s;width:100%;justify-content:center;}
+.btn-add-ej:hover{border-color:var(--green);color:var(--green-light);}
+
+/* ACCIONES */
+.acciones{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-guardar{flex:2;height:48px;background:var(--green);border:none;border-radius:var(--radius-sm);color:#fff;font-family:var(--font-display);font-size:1.1rem;font-weight:700;letter-spacing:0.05em;cursor:pointer;transition:background 0.18s;}
+.btn-guardar:hover{background:var(--green-light);}
+.btn-progreso{flex:1;height:48px;background:rgba(33,150,243,0.15);border:1px solid rgba(33,150,243,0.3);border-radius:var(--radius-sm);color:#90caf9;font-family:var(--font-display);font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.18s;}
+.btn-progreso:hover{background:rgba(33,150,243,0.25);}
+
+/* ESTADO VACÍO */
+.empty-rutina{text-align:center;padding:2.5rem;color:var(--text3);font-size:0.88rem;}
+
+/* MODAL REF */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-bg.open{opacity:1;pointer-events:all;}
+.modal-ref{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);width:100%;max-width:440px;padding:1.5rem;transform:translateY(16px);transition:transform 0.2s;}
+.modal-bg.open .modal-ref{transform:translateY(0);}
+.modal-ref h3{font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:1rem;}
+.modal-ref label{display:block;font-size:0.78rem;color:var(--text2);margin-bottom:6px;font-weight:600;}
+.modal-ref input{width:100%;height:42px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-family:var(--font-body);font-size:0.9rem;color:var(--text);outline:none;margin-bottom:1rem;}
+.modal-ref input:focus{border-color:var(--green);}
+.modal-ref-btns{display:flex;gap:10px;}
+.btn-modal-cancel{flex:1;height:40px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--font-body);cursor:pointer;}
+.btn-modal-ok{flex:2;height:40px;background:var(--green);border:none;border-radius:var(--radius-sm);color:#fff;font-family:var(--font-display);font-size:1rem;font-weight:700;cursor:pointer;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <svg class="nav-shield" viewBox="0 0 28 32" fill="none">
+      <path d="M14 1L1 6.5V17c0 7.5 5.5 13 13 16 7.5-3 13-8.5 13-16V6.5L14 1z" fill="#2d6e32"/>
+      <text x="14" y="16" text-anchor="middle" font-family="Rajdhani,sans-serif" font-weight="700" font-size="6" fill="white" letter-spacing="0.5">HINDÚ</text>
+      <rect x="5" y="18" width="18" height="1.5" fill="white" opacity="0.8"/>
+      <rect x="5" y="21" width="18" height="1.5" fill="white" opacity="0.5"/>
+    </svg>
+    HINDÚ <span style="color:var(--text2);font-weight:500;margin:0 4px">—</span> CoreFit
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="location.href='instructores.html'">Instructores</button>
+    <button class="nav-tab" onclick="location.href='alumnos.html'">Alumnos</button>
+    <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
+    <button class="nav-tab" onclick="location.href='asistencia.html'">Asistencia</button>
+    <button class="nav-tab active">Rutinas</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Paso 1: buscar alumno -->
+  <div class="step-card" id="step-buscar">
+    <div class="step-title">
+      <div class="step-num">1</div>
+      Seleccioná el alumno
+    </div>
+    <div class="buscar-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="buscarInput" placeholder="Escribí el nombre del alumno…" oninput="buscarFn()" autocomplete="off">
+      <div class="sugerencias" id="sugerencias"></div>
+    </div>
+  </div>
+
+  <!-- Header alumno seleccionado -->
+  <div class="alumno-header" id="alumnoHeader" style="display:none">
+    <div>
+      <h2 id="alumnoNombre">—</h2>
+      <p id="alumnoInfo">—</p>
+    </div>
+    <button class="btn-cambiar" onclick="cambiarAlumno()">Cambiar alumno</button>
+  </div>
+
+  <!-- Días tabs -->
+  <div class="dias-wrap" id="diasWrap" style="display:none"></div>
+
+  <!-- Editor rutina del día -->
+  <div class="rutina-editor" id="rutinaEditor" style="display:none">
+    <div class="editor-header">
+      <h3 id="editorTitulo">Lunes</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="grupo-sel" id="grupoSel" onchange="actualizarGrupoDia()">
+          <option value="">Grupo muscular…</option>
+          <optgroup label="Pecho y Brazos">
+            <option>Pecho</option>
+            <option>Bíceps</option>
+            <option>Tríceps</option>
+            <option>Hombros</option>
+            <option>Antebrazos</option>
+          </optgroup>
+          <optgroup label="Espalda">
+            <option>Espalda Alta</option>
+            <option>Espalda Baja</option>
+            <option>Trapecio</option>
+          </optgroup>
+          <optgroup label="Piernas">
+            <option>Cuádriceps</option>
+            <option>Femoral</option>
+            <option>Glúteos</option>
+            <option>Gemelos</option>
+            <option>Aductores</option>
+          </optgroup>
+          <optgroup label="Core">
+            <option>Abdomen</option>
+            <option>Lumbares</option>
+          </optgroup>
+          <optgroup label="General">
+            <option>Cuerpo Completo</option>
+            <option>Funcional</option>
+            <option>Cardio</option>
+          </optgroup>
+        </select>
+        <button class="btn-descanso" onclick="marcarDescanso()">🌙 Descanso</button>
+      </div>
+    </div>
+    <table class="tabla-ejercicios">
+      <thead>
+        <tr>
+          <th style="width:30%">Ejercicio</th>
+          <th style="width:12%">Peso (kg)</th>
+          <th style="width:10%">Series</th>
+          <th style="width:10%">Reps</th>
+          <th style="width:28%">Referencia</th>
+          <th style="width:5%"></th>
+        </tr>
+      </thead>
+      <tbody id="ejerciciosBody"></tbody>
+    </table>
+    <div class="add-ejercicio-row">
+      <button class="btn-add-ej" onclick="agregarEjercicio()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar Ejercicio
+      </button>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="acciones" id="acciones" style="display:none">
+    <button class="btn-guardar" onclick="guardarRutina()">💾 GUARDAR RUTINA</button>
+    <button class="btn-progreso" onclick="alert('Próximamente: Ver Progreso del Alumno')">📈 VER PROGRESO</button>
+  </div>
+
+</main>
+
+<!-- Modal referencia -->
+<div class="modal-bg" id="modalRef" onclick="cerrarModalRef(event)">
+  <div class="modal-ref">
+    <h3>Agregar referencia</h3>
+    <label>URL de imagen o video (YouTube, Drive, etc.)</label>
+    <input type="text" id="refInput" placeholder="https://…">
+    <div class="modal-ref-btns">
+      <button class="btn-modal-cancel" onclick="document.getElementById('modalRef').classList.remove('open')">Cancelar</button>
+      <button class="btn-modal-ok" onclick="confirmarRef()">CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER_ALUMNOS  = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_RUTINAS  = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/rutinas';
+const API_RUTINAS     = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/rutinas';
+
+const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+// Base de datos de ejercicios por grupo muscular
+// Podés ampliar esta lista con más ejercicios y URLs
+const DB_EJERCICIOS = {
+  'Pecho': [
+    { ejercicio: 'Press de Banca', modalidad: 'Banco y barra', referencia: 'https://th.bing.com/th/id/OIP.uhJ7YpePtXhwceA0-pIZVwHaEK?w=332&h=186&c=7&r=0&o=5&pid=1.7' },
+    { ejercicio: 'Press Inclinado', modalidad: 'Banco inclinado y mancuernas', referencia: '' },
+    { ejercicio: 'Aperturas', modalidad: 'Mancuernas', referencia: '' },
+    { ejercicio: 'Fondos en paralelas', modalidad: 'Paralelas', referencia: '' },
+  ],
+  'Bíceps': [
+    { ejercicio: 'Curl con mancuernas', modalidad: 'Mancuernas', referencia: 'https://th.bing.com/th/id/OIP.7TSAnY0-HcTRwrLr-gPEMwHaEK?w=332&h=186&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3' },
+    { ejercicio: 'Curl con barra', modalidad: 'Barra', referencia: '' },
+    { ejercicio: 'Curl martillo', modalidad: 'Mancuernas', referencia: '' },
+    { ejercicio: 'Curl concentrado', modalidad: 'Mancuerna', referencia: '' },
+  ],
+  'Tríceps': [
+    { ejercicio: 'Press francés', modalidad: 'Barra EZ', referencia: '' },
+    { ejercicio: 'Extensión en polea', modalidad: 'Polea alta', referencia: '' },
+    { ejercicio: 'Fondos en banco', modalidad: 'Banco', referencia: '' },
+    { ejercicio: 'Patada de tríceps', modalidad: 'Mancuerna', referencia: '' },
+  ],
+  'Hombros': [
+    { ejercicio: 'Press militar', modalidad: 'Barra o mancuernas', referencia: '' },
+    { ejercicio: 'Elevaciones laterales', modalidad: 'Mancuernas', referencia: '' },
+    { ejercicio: 'Elevaciones frontales', modalidad: 'Mancuernas', referencia: '' },
+    { ejercicio: 'Pájaros', modalidad: 'Mancuernas', referencia: '' },
+  ],
+  'Espalda Alta': [
+    { ejercicio: 'Dominadas', modalidad: 'Barra sin peso', referencia: '' },
+    { ejercicio: 'Remo con barra', modalidad: 'Barra', referencia: '' },
+    { ejercicio: 'Remo con mancuerna', modalidad: 'Mancuerna', referencia: '' },
+    { ejercicio: 'Jalón al pecho', modalidad: 'Polea alta', referencia: '' },
+  ],
+  'Espalda Baja': [
+    { ejercicio: 'Peso muerto', modalidad: 'Barra', referencia: '' },
+    { ejercicio: 'Hiperextensiones', modalidad: 'Banco romano', referencia: '' },
+    { ejercicio: 'Buenos días', modalidad: 'Barra', referencia: '' },
+  ],
+  'Trapecio': [
+    { ejercicio: 'Encogimientos', modalidad: 'Mancuernas o barra', referencia: '' },
+    { ejercicio: 'Remo al mentón', modalidad: 'Barra', referencia: '' },
+  ],
+  'Cuádriceps': [
+    { ejercicio: 'Sentadillas', modalidad: 'Barra o libre', referencia: '' },
+    { ejercicio: 'Prensa de piernas', modalidad: 'Máquina', referencia: '' },
+    { ejercicio: 'Extensiones de cuádriceps', modalidad: 'Máquina', referencia: '' },
+    { ejercicio: 'Zancadas', modalidad: 'Mancuernas', referencia: '' },
+  ],
+  'Femoral': [
+    { ejercicio: 'Curl femoral', modalidad: 'Máquina', referencia: '' },
+    { ejercicio: 'Peso muerto rumano', modalidad: 'Barra', referencia: '' },
+    { ejercicio: 'Buenos días', modalidad: 'Barra', referencia: '' },
+  ],
+  'Glúteos': [
+    { ejercicio: 'Hip thrust', modalidad: 'Barra o libre', referencia: '' },
+    { ejercicio: 'Patada trasera', modalidad: 'Polea baja', referencia: '' },
+    { ejercicio: 'Sentadilla sumo', modalidad: 'Mancuerna', referencia: '' },
+  ],
+  'Gemelos': [
+    { ejercicio: 'Elevación de talones de pie', modalidad: 'Máquina o libre', referencia: '' },
+    { ejercicio: 'Elevación de talones sentado', modalidad: 'Máquina', referencia: '' },
+  ],
+  'Aductores': [
+    { ejercicio: 'Aductores en máquina', modalidad: 'Máquina', referencia: '' },
+    { ejercicio: 'Sentadilla sumo', modalidad: 'Mancuerna', referencia: '' },
+  ],
+  'Abdomen': [
+    { ejercicio: 'Crunch', modalidad: 'Libre', referencia: '' },
+    { ejercicio: 'Plancha', modalidad: 'Libre', referencia: '' },
+    { ejercicio: 'Elevación de piernas', modalidad: 'Barra o libre', referencia: '' },
+    { ejercicio: 'Rueda abdominal', modalidad: 'Rueda', referencia: '' },
+  ],
+  'Lumbares': [
+    { ejercicio: 'Hiperextensiones', modalidad: 'Banco romano', referencia: '' },
+    { ejercicio: 'Superman', modalidad: 'Libre', referencia: '' },
+  ],
+  'Cuerpo Completo': [
+    { ejercicio: 'Peso muerto', modalidad: 'Barra', referencia: '' },
+    { ejercicio: 'Burpees', modalidad: 'Libre', referencia: '' },
+    { ejercicio: 'Clean and press', modalidad: 'Barra', referencia: '' },
+  ],
+  'Funcional': [
+    { ejercicio: 'Kettlebell swing', modalidad: 'Kettlebell', referencia: '' },
+    { ejercicio: 'Box jumps', modalidad: 'Cajón', referencia: '' },
+    { ejercicio: 'Battle ropes', modalidad: 'Cuerdas', referencia: '' },
+  ],
+  'Cardio': [
+    { ejercicio: 'Cinta', modalidad: 'Cinta de correr', referencia: '' },
+    { ejercicio: 'Bicicleta estática', modalidad: 'Bicicleta', referencia: '' },
+    { ejercicio: 'Elíptica', modalidad: 'Elíptica', referencia: '' },
+  ],
+};
+
+let alumnos      = [];
+let rutinasExist = []; // rutinas guardadas en Sheet
+let alumnoActual = null;
+let diaActual    = 'Lunes';
+let refRowIdx    = null; // índice de fila para el modal de referencia
+
+// Estado local de la rutina: { dia: { grupo, descanso, ejercicios[] } }
+let estadoRutina = {};
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const header = parseLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = parseLine(line);
+    const obj = {};
+    header.forEach((h,i) => obj[h.trim()] = String(vals[i]||'').trim());
+    return obj;
+  }).filter(r => Object.values(r).some(v=>v));
+}
+function parseLine(line) {
+  const result=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){result.push(cur);cur='';}else cur+=c;}
+  result.push(cur);
+  return result.map(s=>s.trim().replace(/^"|"$/g,''));
+}
+
+async function init() {
+  try {
+    const [respAlum, respRut] = await Promise.all([
+      fetch(WORKER_ALUMNOS),
+      fetch(WORKER_RUTINAS)
+    ]);
+    alumnos      = parseCSV(await respAlum.text());
+    rutinasExist = parseCSV(await respRut.text());
+  } catch(e) { console.error(e); }
+}
+
+// ── Buscador ──
+function buscarFn() {
+  const q = document.getElementById('buscarInput').value.toLowerCase().trim();
+  const sug = document.getElementById('sugerencias');
+  if (!q || q.length < 2) { sug.classList.remove('open'); return; }
+  const res = alumnos.filter(a =>
+    String(a['Nmbre y Apellido']||a['Nombre y Apellido']||'').toLowerCase().includes(q)
+  ).slice(0, 8);
+  if (!res.length) { sug.classList.remove('open'); return; }
+  sug.innerHTML = res.map(a => {
+    const nombre = String(a['Nmbre y Apellido']||a['Nombre y Apellido']||'').trim();
+    const dni    = String(a['DNI']||'').trim();
+    const act    = String(a['Actividad']||'').trim();
+    return `<div class="sug-item" onclick="selAlumno('${nombre}','${dni}','${act}')">
+      <span>${nombre}</span><span class="sug-dni">DNI: ${dni} · ${act}</span>
+    </div>`;
+  }).join('');
+  sug.classList.add('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.buscar-wrap')) document.getElementById('sugerencias').classList.remove('open');
+});
+
+function selAlumno(nombre, dni, actividad) {
+  alumnoActual = { nombre, dni, actividad };
+  document.getElementById('sugerencias').classList.remove('open');
+  document.getElementById('buscarInput').value = '';
+  document.getElementById('step-buscar').style.display = 'none';
+
+  document.getElementById('alumnoNombre').textContent = nombre;
+  document.getElementById('alumnoInfo').textContent   = 'DNI: ' + dni + (actividad ? ' · ' + actividad : '');
+  document.getElementById('alumnoHeader').style.display = 'flex';
+  document.getElementById('diasWrap').style.display    = 'flex';
+  document.getElementById('acciones').style.display    = 'flex';
+
+  // Cargar rutina existente del alumno
+  cargarRutinaAlumno(dni);
+  renderDias();
+  selDia('Lunes');
+}
+
+function cargarRutinaAlumno(dni) {
+  estadoRutina = {};
+  DIAS.forEach(d => estadoRutina[d] = { grupo:'', descanso:false, ejercicios:[] });
+
+  const misRutinas = rutinasExist.filter(r => String(r['DNI Alumno']||'').trim() === dni);
+  misRutinas.forEach(r => {
+    const dia = String(r['Dia']||'').trim();
+    if (!estadoRutina[dia]) return;
+    if (String(r['Grupo Muscular']||'').trim() === 'Descanso') {
+      estadoRutina[dia].descanso = true;
+      return;
+    }
+    estadoRutina[dia].grupo = String(r['Grupo Muscular']||'').trim();
+    estadoRutina[dia].ejercicios.push({
+      ejercicio:   String(r['Ejercicio']||'').trim(),
+      peso:        String(r['Peso']||'').trim(),
+      series:      String(r['Series']||'').trim(),
+      repeticiones:String(r['Repeticiones']||'').trim(),
+      referencia:  String(r['Referencia']||'').trim(),
+    });
+  });
+}
+
+function cambiarAlumno() {
+  alumnoActual = null;
+  estadoRutina = {};
+  document.getElementById('step-buscar').style.display   = 'block';
+  document.getElementById('alumnoHeader').style.display  = 'none';
+  document.getElementById('diasWrap').style.display      = 'none';
+  document.getElementById('rutinaEditor').style.display  = 'none';
+  document.getElementById('acciones').style.display      = 'none';
+}
+
+// ── Días ──
+function renderDias() {
+  const wrap = document.getElementById('diasWrap');
+  wrap.innerHTML = DIAS.map(dia => {
+    const est = estadoRutina[dia] || {};
+    const tieneEj = est.ejercicios && est.ejercicios.length > 0;
+    const descanso = est.descanso;
+    const cls = `dia-tab${diaActual===dia?' active':''}${tieneEj?' tiene-rutina':''}${descanso?' descanso':''}`;
+    const icono = descanso ? '🌙' : tieneEj ? '✅' : '📋';
+    const subtxt = descanso ? 'Descanso' : est.grupo || 'Sin asignar';
+    return `<div class="${cls}" onclick="selDia('${dia}')">
+      <div class="dia-icono">${icono}</div>
+      <div class="dia-nombre">${dia}</div>
+      <div class="dia-grupo">${subtxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function selDia(dia) {
+  diaActual = dia;
+  renderDias();
+
+  const est = estadoRutina[dia] || { grupo:'', descanso:false, ejercicios:[] };
+  document.getElementById('editorTitulo').textContent = dia;
+  document.getElementById('grupoSel').value = est.grupo || '';
+  document.getElementById('rutinaEditor').style.display = 'block';
+  renderEjercicios();
+}
+
+function actualizarGrupoDia() {
+  const grupo = document.getElementById('grupoSel').value;
+  estadoRutina[diaActual].grupo    = grupo;
+  estadoRutina[diaActual].descanso = false;
+
+  // Si el día no tiene ejercicios y hay ejercicios precargados para este grupo, cargarlos
+  if (estadoRutina[diaActual].ejercicios.length === 0 && DB_EJERCICIOS[grupo]) {
+    estadoRutina[diaActual].ejercicios = DB_EJERCICIOS[grupo].map(e => ({
+      ejercicio: e.ejercicio,
+      peso: '',
+      series: '3',
+      repeticiones: '10',
+      referencia: e.referencia,
+    }));
+  }
+  renderEjercicios();
+  renderDias();
+}
+
+function marcarDescanso() {
+  estadoRutina[diaActual].descanso  = true;
+  estadoRutina[diaActual].grupo     = '';
+  estadoRutina[diaActual].ejercicios= [];
+  document.getElementById('grupoSel').value = '';
+  renderEjercicios();
+  renderDias();
+}
+
+// ── Ejercicios ──
+function renderEjercicios() {
+  const est  = estadoRutina[diaActual];
+  const tbody= document.getElementById('ejerciciosBody');
+
+  if (est.descanso) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-rutina">🌙 Día de descanso</div></td></tr>`;
+    return;
+  }
+  if (!est.ejercicios.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-rutina">No hay ejercicios. Hacé click en "+ Agregar Ejercicio"</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = est.ejercicios.map((ej, i) => `
+    <tr>
+      <td><input class="input-ej" type="text" placeholder="Nombre del ejercicio" value="${ej.ejercicio}" oninput="upEj(${i},'ejercicio',this.value)"></td>
+      <td><input class="input-ej input-num" type="number" placeholder="kg" value="${ej.peso}" oninput="upEj(${i},'peso',this.value)"></td>
+      <td><input class="input-ej input-num" type="number" placeholder="3" value="${ej.series}" oninput="upEj(${i},'series',this.value)"></td>
+      <td><input class="input-ej input-num" type="number" placeholder="10" value="${ej.repeticiones}" oninput="upEj(${i},'repeticiones',this.value)"></td>
+      <td>
+        ${ej.referencia
+          ? `<img class="ref-preview" src="${getThumb(ej.referencia)}" onclick="abrirRef(${i})" onerror="this.style.display='none'">`
+          : ''
+        }
+        <button class="btn-ref" onclick="abrirRef(${i})">${ej.referencia ? '✏️ Editar' : '🔗 Agregar'}</button>
+      </td>
+      <td>
+        <button class="btn-del-row" onclick="borrarEj(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function getThumb(url) {
+  // YouTube thumbnail
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+  if (yt) return `https://img.youtube.com/vi/${yt[1]}/default.jpg`;
+  return url;
+}
+
+function upEj(idx, campo, val) {
+  estadoRutina[diaActual].ejercicios[idx][campo] = val;
+}
+
+function agregarEjercicio() {
+  const est = estadoRutina[diaActual];
+  if (est.descanso) { mostrarToast('Este día está marcado como descanso', true); return; }
+  est.ejercicios.push({ ejercicio:'', peso:'', series:'', repeticiones:'', referencia:'' });
+  renderEjercicios();
+  // Focus en el último input
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#ejerciciosBody input[type="text"]');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 50);
+}
+
+function borrarEj(idx) {
+  estadoRutina[diaActual].ejercicios.splice(idx, 1);
+  renderEjercicios();
+}
+
+// ── Modal referencia ──
+function abrirRef(idx) {
+  refRowIdx = idx;
+  const ref = estadoRutina[diaActual].ejercicios[idx].referencia;
+  document.getElementById('refInput').value = ref || '';
+  document.getElementById('modalRef').classList.add('open');
+}
+function confirmarRef() {
+  const val = document.getElementById('refInput').value.trim();
+  estadoRutina[diaActual].ejercicios[refRowIdx].referencia = val;
+  document.getElementById('modalRef').classList.remove('open');
+  renderEjercicios();
+}
+function cerrarModalRef(e) {
+  if (e.target === document.getElementById('modalRef')) document.getElementById('modalRef').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.getElementById('modalRef').classList.remove('open'); });
+
+// ── Guardar ──
+async function guardarRutina() {
+  if (!alumnoActual) { mostrarToast('Seleccioná un alumno primero', true); return; }
+
+  let dniInstructor = '';
+  try { dniInstructor = JSON.parse(sessionStorage.getItem('hcf_user')||'{}').dni||''; } catch(e){}
+
+  const filas = [];
+  DIAS.forEach(dia => {
+    const est = estadoRutina[dia];
+    if (est.descanso) {
+      filas.push({ dniAlumno: alumnoActual.dni, nombreAlumno: alumnoActual.nombre, dia, grupoMuscular:'Descanso', ejercicio:'—', series:'—', repeticiones:'—', peso:'—', referencia:'', dniInstructor });
+    } else {
+      est.ejercicios.forEach(ej => {
+        if (!ej.ejercicio) return;
+        filas.push({ dniAlumno: alumnoActual.dni, nombreAlumno: alumnoActual.nombre, dia, grupoMuscular: est.grupo||'', ejercicio: ej.ejercicio, series: ej.series, repeticiones: ej.repeticiones, peso: ej.peso, referencia: ej.referencia, dniInstructor });
+      });
+    }
+  });
+
+  if (!filas.length) { mostrarToast('Agregá al menos un ejercicio', true); return; }
+
+  mostrarToast('Guardando rutina…');
+
+  try {
+    const params = new URLSearchParams({
+      action: 'guardar',
+      data: JSON.stringify(filas),
+    });
+    fetch(API_RUTINAS + '?' + params.toString()).catch(e => console.warn(e));
+    mostrarToast('✓ Rutina guardada correctamente');
+    renderDias();
+  } catch(e) {
+    mostrarToast('Error al guardar', true);
+  }
+}
+
+function mostrarToast(msg, isError=false) {
+  let t = document.getElementById('toast-gl');
+  if (!t) {
+    t = document.createElement('div'); t.id='toast-gl';
+    t.style.cssText='position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);padding:10px 20px;border-radius:10px;font-size:.85rem;opacity:0;pointer-events:none;transition:all .3s;z-index:999;white-space:nowrap;font-family:var(--font-body)';
+    document.body.appendChild(t);
+  }
+  t.style.background  = isError?'#2c1e1e':'#1e2c1e';
+  t.style.border      = isError?'1px solid #cc2222':'1px solid var(--green)';
+  t.style.color       = isError?'#ef9a9a':'#a5d6a7';
+  t.textContent=msg;
+  t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(10px)';},3000);
+}
+
+init();
+</script>
+</body>
+</html>
