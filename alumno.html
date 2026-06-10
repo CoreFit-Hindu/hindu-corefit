@@ -476,7 +476,11 @@ function verAsistencia(periodo) {
     return new Date(s);
   };
 
+  console.log('Total asistencias:', todas.length);
+  console.log('Desde:', desde);
+  todas.forEach(a => console.log('Fecha raw:', a['Fecha'], '| Parsed:', parseFecha(a['Fecha']).toString(), '| OK:', parseFecha(a['Fecha']) >= desde));
   const filtradas = todas.filter(a => parseFecha(a['Fecha']) >= desde);
+  console.log('Filtradas:', filtradas.length);
   renderAsistenciaAlumno(filtradas, periodo);
 }
 
