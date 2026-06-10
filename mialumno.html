@@ -342,7 +342,7 @@ async function init() {
       renderHistorial(misPagos);
       // Asistencia del alumno
       const misAsistencias = asistencias.filter(a => {
-        const aDni = String(a['DNI Alumno']||'').trim().replace(/\.0$/,'');
+        const aDni = String(a['DNI Alumno']||a['dni alumno']||'').trim().replace(/\.0$/,'');
         const uDni = String(user.dni||'').trim().replace(/\.0$/,'');
         return aDni === uDni;
       });
@@ -468,10 +468,10 @@ function verAsistencia(periodo) {
   let filtradas;
   if (periodo === 'semana') {
     const desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - 7);
-    filtradas = todas.filter(a => parseFecha(a['Fecha']) >= desde);
+    filtradas = todas.filter(a => parseFecha(a['fecha']||a['Fecha']) >= desde);
   } else {
     const desde = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-    filtradas = todas.filter(a => parseFecha(a['Fecha']) >= desde);
+    filtradas = todas.filter(a => parseFecha(a['fecha']||a['Fecha']) >= desde);
   }
 
   // Si no hay filtradas mostrar todas de todas formas
@@ -486,7 +486,7 @@ function renderAsistenciaAlumno(lista, periodo) {
   }
 
   // Calcular stats
-  const dias = new Set(lista.map(a => a['Fecha'])).size;
+  const dias = new Set(lista.map(a => a['fecha']||a['Fecha'])).size;
   const clases = lista.length;
 
   cont.innerHTML = '<div class="asist-stats">' +
@@ -495,10 +495,10 @@ function renderAsistenciaAlumno(lista, periodo) {
     '</div>' +
     '<div class="asist-grid">' +
     lista.map(a => '<div class="asist-dia presente">' +
-      '<div class="asist-fecha">' + (a['Fecha']||'—') + '</div>' +
-      '<div class="asist-act">' + (a['Actividad']||'—') + '</div>' +
-      '<div class="asist-turno">Turno ' + (a['Turno']||'—') + '</div>' +
-      '<div class="asist-hora">' + (a['Hora']||'') + '</div>' +
+      '<div class="asist-fecha">' + (a['fecha']||a['Fecha']||'—') + '</div>' +
+      '<div class="asist-act">' + (a['Actividad']||a['actividad']||'—') + '</div>' +
+      '<div class="asist-turno">Turno ' + (a['Turno']||a['turno']||'—') + '</div>' +
+      '<div class="asist-hora">' + (a['Hora']||a['hora']||'') + '</div>' +
       '<span class="asist-badge">✓ Presente</span>' +
       '</div>'
     ).join('') +
