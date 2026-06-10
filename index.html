@@ -656,7 +656,7 @@
           rol: 'alumno'
         }));
         showToast('✓ Bienvenido, ' + (alumno['Nombre y Apellido']||'').split(' ')[0]);
-        setTimeout(() => { window.location.href = 'mialumno.html'; }, 1000);
+        setTimeout(() => { window.location.href = 'alumno.html'; }, 1000);
       } else {
         wu.classList.add('error'); wp.classList.add('error');
         eu.textContent = 'DNI o contraseña incorrectos';
