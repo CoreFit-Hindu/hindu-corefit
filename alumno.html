@@ -341,7 +341,12 @@ async function init() {
       // Historial
       renderHistorial(misPagos);
       // Asistencia del alumno
-      const misAsistencias = asistencias.filter(a => String(a['DNI Alumno']||'').trim() === String(user.dni||'').trim());
+      const misAsistencias = asistencias.filter(a => {
+        const aDni = String(a['DNI Alumno']||'').trim().replace(/\.0$/,'');
+        const uDni = String(user.dni||'').trim().replace(/\.0$/,'');
+        return aDni === uDni;
+      });
+      console.log('Asistencias encontradas:', misAsistencias.length, 'DNI buscado:', user.dni);
       window._misAsistencias = misAsistencias;
       verAsistencia('semana');
     }
