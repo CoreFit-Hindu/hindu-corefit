@@ -259,15 +259,15 @@ main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem;}
 </div>
 
 <script>
-const WORKER_ALUMNOS  = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_EJERCICIOS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/ejercicios';
 const WORKER_RUTINAS  = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/rutinas';
 const API_RUTINAS     = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/rutinas';
 
 const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
-// Base de datos de ejercicios por grupo muscular
-// Podés ampliar esta lista con más ejercicios y URLs
-const DB_EJERCICIOS = {
+// Base de datos de ejercicios — se carga desde Google Sheets
+let DB_EJERCICIOS = {
   'Pecho': [
     { ejercicio: 'Press de Banca', modalidad: 'Banco y barra', referencia: 'https://th.bing.com/th/id/OIP.uhJ7YpePtXhwceA0-pIZVwHaEK?w=332&h=186&c=7&r=0&o=5&pid=1.7' },
     { ejercicio: 'Press Inclinado', modalidad: 'Banco inclinado y mancuernas', referencia: '' },
@@ -387,12 +387,27 @@ function parseLine(line) {
 
 async function init() {
   try {
-    const [respAlum, respRut] = await Promise.all([
+    const [respAlum, respRut, respEj] = await Promise.all([
       fetch(WORKER_ALUMNOS),
-      fetch(WORKER_RUTINAS)
+      fetch(WORKER_RUTINAS),
+      fetch(WORKER_EJERCICIOS)
     ]);
     alumnos      = parseCSV(await respAlum.text());
     rutinasExist = parseCSV(await respRut.text());
+    const ejerciciosRaw = parseCSV(await respEj.text());
+
+    // Reconstruir DB_EJERCICIOS desde la Sheet
+    DB_EJERCICIOS = {};
+    ejerciciosRaw.forEach(r => {
+      const musculo  = String(r['Musculo']||r['musculo']||r['Músculo']||'').trim();
+      const ejercicio= String(r['Ejercicio']||r['ejercicio']||'').trim();
+      const modalidad= String(r['Modalidad']||r['modalidad']||'').trim();
+      const ref      = String(r['Referencia']||r['referencia']||r['Link']||r['link']||r['Ejemplo']||r['ejemplo']||'').trim();
+      if (!musculo || !ejercicio) return;
+      if (!DB_EJERCICIOS[musculo]) DB_EJERCICIOS[musculo] = [];
+      DB_EJERCICIOS[musculo].push({ ejercicio, modalidad, referencia: ref });
+    });
+    console.log('Grupos cargados:', Object.keys(DB_EJERCICIOS));
   } catch(e) { console.error(e); }
 }
 
