@@ -181,9 +181,11 @@ main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem;}
   <div class="rutina-editor" id="rutinaEditor" style="display:none">
     <div class="editor-header">
       <h3 id="editorTitulo">Lunes</h3>
-      <div style="display:flex;gap:8px;align-items:center">
-        <select class="grupo-sel" id="grupoSel" onchange="actualizarGrupoDia()">
-          <option value="">Grupo muscular…</option>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Grupo 1</label>
+          <select class="grupo-sel" id="grupoSel1" onchange="actualizarGrupos()">
+            <option value="">—</option>
           <optgroup label="Pecho y Brazos">
             <option>Pecho</option>
             <option>Bíceps</option>
@@ -212,8 +214,77 @@ main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem;}
             <option>Funcional</option>
             <option>Cardio</option>
           </optgroup>
-        </select>
-        <button class="btn-descanso" onclick="marcarDescanso()">🌙 Descanso</button>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Grupo 2</label>
+          <select class="grupo-sel" id="grupoSel2" onchange="actualizarGrupos()">
+            <option value="">—</option>
+          <optgroup label="Pecho y Brazos">
+            <option>Pecho</option>
+            <option>Bíceps</option>
+            <option>Tríceps</option>
+            <option>Hombros</option>
+            <option>Antebrazos</option>
+          </optgroup>
+          <optgroup label="Espalda">
+            <option>Espalda Alta</option>
+            <option>Espalda Baja</option>
+            <option>Trapecio</option>
+          </optgroup>
+          <optgroup label="Piernas">
+            <option>Cuádriceps</option>
+            <option>Femoral</option>
+            <option>Glúteos</option>
+            <option>Gemelos</option>
+            <option>Aductores</option>
+          </optgroup>
+          <optgroup label="Core">
+            <option>Abdomen</option>
+            <option>Lumbares</option>
+          </optgroup>
+          <optgroup label="General">
+            <option>Cuerpo Completo</option>
+            <option>Funcional</option>
+            <option>Cardio</option>
+          </optgroup>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Grupo 3</label>
+          <select class="grupo-sel" id="grupoSel3" onchange="actualizarGrupos()">
+            <option value="">—</option>
+          <optgroup label="Pecho y Brazos">
+            <option>Pecho</option>
+            <option>Bíceps</option>
+            <option>Tríceps</option>
+            <option>Hombros</option>
+            <option>Antebrazos</option>
+          </optgroup>
+          <optgroup label="Espalda">
+            <option>Espalda Alta</option>
+            <option>Espalda Baja</option>
+            <option>Trapecio</option>
+          </optgroup>
+          <optgroup label="Piernas">
+            <option>Cuádriceps</option>
+            <option>Femoral</option>
+            <option>Glúteos</option>
+            <option>Gemelos</option>
+            <option>Aductores</option>
+          </optgroup>
+          <optgroup label="Core">
+            <option>Abdomen</option>
+            <option>Lumbares</option>
+          </optgroup>
+          <optgroup label="General">
+            <option>Cuerpo Completo</option>
+            <option>Funcional</option>
+            <option>Cardio</option>
+          </optgroup>
+          </select>
+        </div>
+        <button class="btn-descanso" onclick="marcarDescanso()" style="align-self:flex-end;margin-bottom:2px">🌙 Descanso</button>
       </div>
     </div>
     <table class="tabla-ejercicios">
@@ -455,7 +526,7 @@ function selAlumno(nombre, dni, actividad) {
 
 function cargarRutinaAlumno(dni) {
   estadoRutina = {};
-  DIAS.forEach(d => estadoRutina[d] = { grupo:'', descanso:false, ejercicios:[] });
+  DIAS.forEach(d => estadoRutina[d] = { grupos:['','',''], descanso:false, ejercicios:[] });
 
   const misRutinas = rutinasExist.filter(r => String(r['DNI Alumno']||'').trim() === dni);
   misRutinas.forEach(r => {
@@ -465,7 +536,13 @@ function cargarRutinaAlumno(dni) {
       estadoRutina[dia].descanso = true;
       return;
     }
-    estadoRutina[dia].grupo = String(r['Grupo Muscular']||'').trim();
+    if (!estadoRutina[dia].grupos) estadoRutina[dia].grupos = ['','',''];
+    const grupoExist = String(r['Grupo Muscular']||'').trim();
+    if (grupoExist && grupoExist !== 'Descanso') {
+      const idx = estadoRutina[dia].grupos.findIndex(g => !g || g === grupoExist);
+      if (idx !== -1) estadoRutina[dia].grupos[idx] = grupoExist;
+      else estadoRutina[dia].grupos[0] = grupoExist;
+    }
     estadoRutina[dia].ejercicios.push({
       ejercicio:   String(r['Ejercicio']||'').trim(),
       peso:        String(r['Peso']||'').trim(),
@@ -495,7 +572,9 @@ function renderDias() {
     const descanso = est.descanso;
     const cls = `dia-tab${diaActual===dia?' active':''}${tieneEj?' tiene-rutina':''}${descanso?' descanso':''}`;
     const icono = descanso ? '🌙' : tieneEj ? '✅' : '📋';
-    const subtxt = descanso ? 'Descanso' : est.grupo || 'Sin asignar';
+    const grupos = est.grupos || ['','',''];
+    const gruposLabel = grupos.filter(Boolean).join(' + ');
+    const subtxt = descanso ? 'Descanso' : gruposLabel || 'Sin asignar';
     return `<div class="${cls}" onclick="selDia('${dia}')">
       <div class="dia-icono">${icono}</div>
       <div class="dia-nombre">${dia}</div>
@@ -510,26 +589,34 @@ function selDia(dia) {
 
   const est = estadoRutina[dia] || { grupo:'', descanso:false, ejercicios:[] };
   document.getElementById('editorTitulo').textContent = dia;
-  document.getElementById('grupoSel').value = est.grupo || '';
+  const grupos = est.grupos || ['','',''];
+  document.getElementById('grupoSel1').value = grupos[0] || '';
+  document.getElementById('grupoSel2').value = grupos[1] || '';
+  document.getElementById('grupoSel3').value = grupos[2] || '';
   document.getElementById('rutinaEditor').style.display = 'block';
   renderEjercicios();
 }
 
-function actualizarGrupoDia() {
-  const grupo = document.getElementById('grupoSel').value;
-  estadoRutina[diaActual].grupo    = grupo;
+function actualizarGrupos() {
+  const g1 = document.getElementById('grupoSel1').value;
+  const g2 = document.getElementById('grupoSel2').value;
+  const g3 = document.getElementById('grupoSel3').value;
+  estadoRutina[diaActual].grupos   = [g1, g2, g3];
   estadoRutina[diaActual].descanso = false;
 
-  // Si el día no tiene ejercicios y hay ejercicios precargados para este grupo, cargarlos
-  if (estadoRutina[diaActual].ejercicios.length === 0 && DB_EJERCICIOS[grupo]) {
-    estadoRutina[diaActual].ejercicios = DB_EJERCICIOS[grupo].map(e => ({
-      ejercicio: e.ejercicio,
-      peso: '',
-      series: '3',
-      repeticiones: '10',
-      referencia: e.referencia,
-    }));
-  }
+  // Reconstruir ejercicios combinando los 3 grupos
+  const nuevosEj = [];
+  [g1, g2, g3].forEach(grupo => {
+    if (grupo && DB_EJERCICIOS[grupo]) {
+      DB_EJERCICIOS[grupo].forEach(e => {
+        // Evitar duplicados
+        if (!nuevosEj.find(x => x.ejercicio === e.ejercicio)) {
+          nuevosEj.push({ ejercicio: e.ejercicio, peso: '', series: '3', repeticiones: '10', referencia: e.referencia });
+        }
+      });
+    }
+  });
+  estadoRutina[diaActual].ejercicios = nuevosEj;
   renderEjercicios();
   renderDias();
 }
@@ -638,9 +725,10 @@ async function guardarRutina() {
     if (est.descanso) {
       filas.push({ dniAlumno: alumnoActual.dni, nombreAlumno: alumnoActual.nombre, dia, grupoMuscular:'Descanso', ejercicio:'—', series:'—', repeticiones:'—', peso:'—', referencia:'', dniInstructor });
     } else {
+      const gruposLabel = (est.grupos||['','','']).filter(Boolean).join(' + ');
       est.ejercicios.forEach(ej => {
         if (!ej.ejercicio) return;
-        filas.push({ dniAlumno: alumnoActual.dni, nombreAlumno: alumnoActual.nombre, dia, grupoMuscular: est.grupo||'', ejercicio: ej.ejercicio, series: ej.series, repeticiones: ej.repeticiones, peso: ej.peso, referencia: ej.referencia, dniInstructor });
+        filas.push({ dniAlumno: alumnoActual.dni, nombreAlumno: alumnoActual.nombre, dia, grupoMuscular: gruposLabel||'', ejercicio: ej.ejercicio, series: ej.series, repeticiones: ej.repeticiones, peso: ej.peso, referencia: ej.referencia, dniInstructor });
       });
     }
   });
