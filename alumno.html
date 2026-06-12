@@ -120,6 +120,22 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 .act-desc { font-size: 0.78rem; color: var(--text3); margin-top: 2px; }
 .act-horario { font-size: 0.8rem; color: var(--text2); font-weight: 600; white-space: nowrap; }
 
+/* RUTINA ALUMNO */
+.rutina-dias { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.rutina-dia-btn { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 14px; cursor:pointer; font-size:0.8rem; font-family:var(--font-body); color:var(--text2); transition:all 0.18s; }
+.rutina-dia-btn:hover { border-color:var(--border2); color:var(--text); }
+.rutina-dia-btn.active { border-color:var(--green); color:var(--green-light); background:rgba(58,158,63,0.1); }
+.rutina-dia-btn.descanso { border-color:rgba(245,158,11,0.3); color:var(--amber); }
+.rutina-tabla { width:100%; border-collapse:collapse; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.rutina-tabla thead tr { background:var(--bg3); border-bottom:1px solid var(--border2); }
+.rutina-tabla thead th { padding:8px 12px; text-align:left; font-size:0.7rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; }
+.rutina-tabla tbody tr { border-bottom:1px solid var(--border); }
+.rutina-tabla tbody tr:last-child { border-bottom:none; }
+.rutina-tabla tbody td { padding:10px 12px; font-size:0.84rem; color:var(--text2); }
+.rutina-tabla tbody td.ej-nombre { color:var(--text); font-weight:600; }
+.rutina-grupo-header { background:rgba(58,158,63,0.08); padding:8px 12px; font-size:0.72rem; font-weight:700; color:#81c784; text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--border); }
+.btn-ver-ref { background:rgba(33,150,243,0.1); border:1px solid rgba(33,150,243,0.2); border-radius:6px; color:#90caf9; font-size:0.72rem; padding:3px 8px; cursor:pointer; text-decoration:none; display:inline-block; }
+
 /* ASISTENCIA ALUMNO */
 .asist-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
 .asist-dia { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; }
@@ -235,7 +251,7 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
         Mi Rutina
       </div>
     </div>
-    <div class="rutina-grid" id="rutinaGrid">
+    <div id="rutinaGrid">
       <div class="empty-msg">Tu instructor aún no cargó tu rutina.<br>Consultale en tu próxima clase.</div>
     </div>
   </div>
@@ -259,6 +275,7 @@ main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
 <script>
 const WORKER_ALUMNOS     = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
+const WORKER_RUTINAS2    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/rutinas';
 const WORKER_ASISTENCIA2 = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/asistencia';
 const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 
@@ -298,14 +315,16 @@ async function init() {
 
   // Cargar datos del alumno desde la sheet
   try {
-    const [respAlum, respMem, respAsist] = await Promise.all([
+    const [respAlum, respMem, respAsist, respRut] = await Promise.all([
       fetch(WORKER_ALUMNOS),
       fetch(WORKER_MEMBRESIAS),
-      fetch(WORKER_ASISTENCIA2)
+      fetch(WORKER_ASISTENCIA2),
+      fetch(WORKER_RUTINAS2)
     ]);
-    const rows       = parseCSV(await respAlum.text());
-    const pagos      = parseCSV(await respMem.text());
+    const rows        = parseCSV(await respAlum.text());
+    const pagos       = parseCSV(await respMem.text());
     const asistencias = parseCSV(await respAsist.text());
+    const rutinas     = parseCSV(await respRut.text());
     const alumno  = rows.find(r => String(r['DNI']||'').trim() === String(user.dni||'').trim());
     // Buscar último pago del alumno
     const misPagos = pagos
@@ -340,6 +359,9 @@ async function init() {
       renderMembresia(ultimoPago);
       // Historial
       renderHistorial(misPagos);
+      // Rutina del alumno
+      const misRutinas = rutinas.filter(r => String(r['DNI Alumno']||'').trim().replace(/\.0$/,'') === String(user.dni||'').trim());
+      renderRutina(misRutinas);
       // Asistencia del alumno
       const misAsistencias = asistencias.filter(a => {
         const aDni = String(a['DNI Alumno']||a['dni alumno']||'').trim().replace(/\.0$/,'');
@@ -391,6 +413,84 @@ function renderHistorial(pagos) {
         '</tr>';
     }).join('') +
     '</tbody></table>';
+}
+
+function renderRutina(rutinas) {
+  const cont = document.getElementById('rutinaGrid');
+  if (!rutinas || !rutinas.length) {
+    cont.innerHTML = '<div class="empty-msg">Tu instructor aún no cargó tu rutina.<br>Consultale en tu próxima clase.</div>';
+    return;
+  }
+
+  // Agrupar por día
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const porDia = {};
+  rutinas.forEach(r => {
+    const dia = String(r['Dia']||r['dia']||'').trim();
+    if (!porDia[dia]) porDia[dia] = [];
+    porDia[dia].push(r);
+  });
+
+  const diasConDatos = dias.filter(d => porDia[d] && porDia[d].length);
+  if (!diasConDatos.length) {
+    cont.innerHTML = '<div class="empty-msg">Tu instructor aún no cargó tu rutina.</div>';
+    return;
+  }
+
+  let diaActivo = diasConDatos[0];
+
+  function renderDiaRutina(dia) {
+    const ejercicios = porDia[dia] || [];
+    const esDescanso = ejercicios.length === 1 && String(ejercicios[0]['Grupo Muscular']||'').trim() === 'Descanso';
+
+    if (esDescanso) {
+      return '<div class="empty-msg" style="padding:1.5rem">🌙 Día de descanso</div>';
+    }
+
+    // Agrupar por grupo muscular
+    const grupos = {};
+    ejercicios.forEach(r => {
+      const g = String(r['Grupo Muscular']||r['grupo muscular']||'General').trim();
+      if (!grupos[g]) grupos[g] = [];
+      grupos[g].push(r);
+    });
+
+    return '<table class="rutina-tabla"><thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Peso</th><th>Referencia</th></tr></thead><tbody>' +
+      Object.entries(grupos).map(([grupo, ejercs]) =>
+        '<tr><td colspan="5" class="rutina-grupo-header">' + grupo + '</td></tr>' +
+        ejercs.map(r => {
+          const ref = String(r['Referencia']||r['referencia']||'').trim();
+          const refBtn = ref ? '<a href="' + ref + '" target="_blank" class="btn-ver-ref">Ver 🔗</a>' : '—';
+          return '<tr>'
+            + '<td class="ej-nombre">' + (r['Ejercicio']||r['ejercicio']||'—') + '</td>'
+            + '<td>' + (r['Series']||r['series']||'—') + '</td>'
+            + '<td>' + (r['Repeticiones']||r['repeticiones']||'—') + '</td>'
+            + '<td>' + (r['Peso']||r['peso']||'—') + ' kg</td>'
+            + '<td>' + refBtn + '</td>'
+            + '</tr>';
+        }).join('')
+      ).join('') +
+      '</tbody></table>';
+  }
+
+  cont.innerHTML =
+    '<div class="rutina-dias">' +
+    diasConDatos.map(d => {
+      const esDesc = porDia[d].length === 1 && String(porDia[d][0]['Grupo Muscular']||'').trim() === 'Descanso';
+      return '<button class="rutina-dia-btn' + (d===diaActivo?' active':'') + (esDesc?' descanso':'') + '" onclick="cambioDiaRutina('' + d + '')">' +
+        (esDesc ? '🌙 ' : '') + d + '</button>';
+    }).join('') +
+    '</div>' +
+    '<div id="rutinaDiaContent">' + renderDiaRutina(diaActivo) + '</div>';
+
+  window._rutinasAlumno = { porDia, renderDiaRutina };
+}
+
+function cambioDiaRutina(dia) {
+  document.querySelectorAll('.rutina-dia-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.replace('🌙 ','').trim() === dia);
+  });
+  document.getElementById('rutinaDiaContent').innerHTML = window._rutinasAlumno.renderDiaRutina(dia);
 }
 
 function renderMembresia(pago) {
