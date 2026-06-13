@@ -477,8 +477,8 @@ function renderRutina(rutinas) {
     '<div class="rutina-dias">' +
     diasConDatos.map(d => {
       const esDesc = porDia[d].length === 1 && String(porDia[d][0]['Grupo Muscular']||'').trim() === 'Descanso';
-      return '<button class="rutina-dia-btn' + (d===diaActivo?' active':'') + (esDesc?' descanso':'') + '" onclick="cambioDiaRutina('' + d + '')">' +
-        (esDesc ? '🌙 ' : '') + d + '</button>';
+      return '<button class="rutina-dia-btn' + (d===diaActivo?' active':'') + (esDesc?' descanso':'') + '" onclick="cambioDiaRutina(' + JSON.stringify(d) + ')">' 
+        + (esDesc ? '🌙 ' : '') + d + '</button>';
     }).join('') +
     '</div>' +
     '<div id="rutinaDiaContent">' + renderDiaRutina(diaActivo) + '</div>';
