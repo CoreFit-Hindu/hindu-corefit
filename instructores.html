@@ -442,7 +442,7 @@ main {
     <button class="nav-tab" onclick="window.location.href='alumnos.html'">Alumnos</button>
     <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
     <button class="nav-tab" onclick="location.href='asistencia.html'">Asistencia</button>
-    <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
+    <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
   </div>
 
   <div class="nav-right">
@@ -553,7 +553,7 @@ main {
 </div>
 
 <script>
-const WORKER_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/';
+const WORKER_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/instructores';
 let todos = [];
 
 function getNombre(r)   { return String(r['Nombre y Apellido'] || '').trim(); }
