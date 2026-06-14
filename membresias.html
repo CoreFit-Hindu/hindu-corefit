@@ -145,7 +145,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
     <button class="nav-tab" onclick="location.href='alumnos.html'">Alumnos</button>
     <button class="nav-tab active">Membresías</button>
     <button class="nav-tab" onclick="location.href='asistencia.html'">Asistencia</button>
-    <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
+    <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
     <button class="btn-sync" id="btnSync" onclick="cargarDatos(true)">
@@ -499,7 +499,9 @@ async function validarPago(idx, nuevoEstado) {
       fecha: fecha,
       estado: nuevoEstado,
     });
-    await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    const respVal = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    const respText = await respVal.text();
+    console.log('Validar respuesta:', respText);
     todos[idx]['Estado'] = nuevoEstado;
     actualizarStats();
     poblarFiltroInstructor();
