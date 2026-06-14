@@ -122,7 +122,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
     <button class="nav-tab" onclick="location.href='alumnos.html'">Alumnos</button>
     <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
     <button class="nav-tab active">Asistencia</button>
-    <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
+    <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
   </div>
   <div class="nav-right">
     <button class="btn-sync" id="btnSync" onclick="cargarHistorial(true)">
@@ -280,7 +280,7 @@ async function init() {
 
     // Filtrar asistencia de hoy
     const hoy = fechaHoyCorta();
-    asistenciaHoy = historial.filter(r => String(r['Fecha']||'').trim() === hoy);
+    asistenciaHoy = historial.filter(r => String(String(r['fecha']||r['Fecha']||'')||'').trim() === hoy);
 
     actualizarStats();
     renderAsistenciaHoy();
@@ -297,7 +297,7 @@ async function cargarHistorial(manual=false) {
     const resp = await fetch(WORKER_ASISTENCIA);
     historial = parseCSV(await resp.text());
     const hoy = fechaHoyCorta();
-    asistenciaHoy = historial.filter(r => String(r['Fecha']||'').trim() === hoy);
+    asistenciaHoy = historial.filter(r => String(String(r['fecha']||r['Fecha']||'')||'').trim() === hoy);
     actualizarStats();
     renderAsistenciaHoy();
     filtrarHistorial();
@@ -321,9 +321,9 @@ function actualizarStats() {
     return new Date(f);
   };
 
-  document.getElementById('st-hoy').textContent    = historial.filter(r=>String(r['Fecha']||'').trim()===hoy).length;
-  document.getElementById('st-semana').textContent  = historial.filter(r=>parseFecha(r['Fecha'])>=inicioSem).length;
-  document.getElementById('st-mes').textContent     = historial.filter(r=>parseFecha(r['Fecha'])>=inicioMes).length;
+  document.getElementById('st-hoy').textContent    = historial.filter(r=>String(String(r['fecha']||r['Fecha']||'')||'').trim()===hoy).length;
+  document.getElementById('st-semana').textContent  = historial.filter(r=>parseFecha(String(r['fecha']||r['Fecha']||''))>=inicioSem).length;
+  document.getElementById('st-mes').textContent     = historial.filter(r=>parseFecha(String(r['fecha']||r['Fecha']||''))>=inicioMes).length;
   document.getElementById('st-total').textContent   = historial.length;
 }
 
@@ -336,11 +336,11 @@ function renderAsistenciaHoy() {
   cont.innerHTML = asistenciaHoy.map((r,i) => `
     <div class="asistencia-item presente" style="animation-delay:${i*0.05}s">
       <div>
-        <div class="asistencia-nombre">${r['Nombre Alumno']||'—'}</div>
-        <div class="asistencia-meta">DNI: ${r['DNI Alumno']||'—'} · ${r['Actividad']||'—'} · Turno ${r['Turno']||'—'}</div>
+        <div class="asistencia-nombre">${String(r['Nombre Alumno']||r['nombre alumno']||'')||'—'}</div>
+        <div class="asistencia-meta">DNI: ${String(r['DNI Alumno']||r['dni alumno']||'')||'—'} · ${String(r['Actividad']||r['actividad']||'')||'—'} · Turno ${String(r['Turno']||r['turno']||'')||'—'}</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <span class="asistencia-hora">${r['Hora']||'—'}</span>
+        <span class="asistencia-hora">${String(r['hora']||r['Hora']||'')||'—'}</span>
         <span class="asistencia-badge">✓ Presente</span>
       </div>
     </div>
@@ -393,9 +393,9 @@ async function registrarAsistencia(nombre, dni) {
 
   // Verificar si ya está registrado hoy con mismo turno y actividad
   const yaRegistrado = asistenciaHoy.find(r =>
-    String(r['DNI Alumno']||'').trim() === dni &&
-    r['Actividad'] === actividad &&
-    r['Turno'] === turno
+    String(String(r['DNI Alumno']||r['dni alumno']||'')||'').trim() === dni &&
+    String(r['Actividad']||r['actividad']||'') === actividad &&
+    String(r['Turno']||r['turno']||'') === turno
   );
 
   if (yaRegistrado) {
@@ -450,16 +450,16 @@ function filtrarHistorial() {
   const fecha  = document.getElementById('filtroFecha').value;
 
   const res = historial.filter(r => {
-    const nombre = String(r['Nombre Alumno']||'').toLowerCase();
-    const dni    = String(r['DNI Alumno']||'');
+    const nombre = String(String(r['Nombre Alumno']||r['nombre alumno']||'')||'').toLowerCase();
+    const dni    = String(String(r['DNI Alumno']||r['dni alumno']||'')||'');
     if (q && !nombre.includes(q) && !dni.includes(q)) return false;
-    if (act   && r['Actividad'] !== act)   return false;
-    if (turno && r['Turno']     !== turno) return false;
+    if (act   && String(r['Actividad']||r['actividad']||'') !== act)   return false;
+    if (turno && String(r['Turno']||r['turno']||'')     !== turno) return false;
     if (fecha) {
       // fecha del input viene como YYYY-MM-DD, convertir a dd/mm/yyyy para comparar
       const [y,m,d] = fecha.split('-');
       const fechaFormato = d+'/'+m+'/'+y;
-      if (String(r['Fecha']||'').trim() !== fechaFormato) return false;
+      if (String(String(r['fecha']||r['Fecha']||'')||'').trim() !== fechaFormato) return false;
     }
     return true;
   });
@@ -475,12 +475,12 @@ function renderHistorial(lista) {
   }
   tbody.innerHTML = lista.map(r => `
     <tr>
-      <td>${r['Fecha']||'—'}</td>
-      <td>${r['Hora']||'—'}</td>
-      <td class="nombre">${r['Nombre Alumno']||'—'}</td>
-      <td>${r['DNI Alumno']||'—'}</td>
-      <td>${r['Actividad']||'—'}</td>
-      <td>${r['Turno']||'—'}</td>
+      <td>${String(r['fecha']||r['Fecha']||'')||'—'}</td>
+      <td>${String(r['hora']||r['Hora']||'')||'—'}</td>
+      <td class="nombre">${String(r['Nombre Alumno']||r['nombre alumno']||'')||'—'}</td>
+      <td>${String(r['DNI Alumno']||r['dni alumno']||'')||'—'}</td>
+      <td>${String(r['Actividad']||r['actividad']||'')||'—'}</td>
+      <td>${String(r['Turno']||r['turno']||'')||'—'}</td>
       <td><span class="pres-badge"><span class="pres-dot"></span>Presente</span></td>
     </tr>
   `).join('');
