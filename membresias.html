@@ -355,9 +355,10 @@ async function cargarDatos(manual=false) {
   document.getElementById('tablaBody').innerHTML =
     '<tr><td colspan="8"><div class="state-msg"><div class="loader"></div>Cargando membresías…</div></td></tr>';
   try {
+    const cb = '?cb=' + Date.now();
     const [respMem, respAlum] = await Promise.all([
-      fetch(WORKER_MEMBRESIAS),
-      fetch(WORKER_ALUMNOS)
+      fetch(WORKER_MEMBRESIAS + cb),
+      fetch(WORKER_ALUMNOS + cb)
     ]);
     const textMem  = await respMem.text();
     const textAlum = await respAlum.text();
@@ -493,11 +494,13 @@ async function validarPago(idx, nuevoEstado) {
   if (!confirm(`¿${nuevoEstado} el pago de ${nombre}?`)) return;
   try {
     mostrarToast('Guardando…');
+    const forma = getVal(r,'Forma de Pago');
     const params = new URLSearchParams({
       action: 'validar',
       dni: dni,
       fecha: fecha,
       estado: nuevoEstado,
+      forma: forma,
     });
     const respVal = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
     const respText = await respVal.text();
