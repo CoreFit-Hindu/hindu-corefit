@@ -422,10 +422,28 @@ function renderRutina(rutinas) {
     return;
   }
 
+  // Tomar solo la rutina más reciente por alumno
+  // Ordenar por fecha de asignación descendente
+  const parseFechaRut = f => {
+    const s = String(f||'').trim();
+    const p = s.split('/');
+    if (p.length===3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    return new Date(s);
+  };
+  
+  // Encontrar la fecha más reciente
+  const fechas = rutinas.map(r => String(r['Fecha Asignacion']||r['fecha asignacion']||'').trim()).filter(Boolean);
+  const fechaMax = fechas.sort((a,b) => parseFechaRut(b) - parseFechaRut(a))[0];
+  
+  // Filtrar solo rutinas de la fecha más reciente
+  const rutinasFiltradas = fechaMax 
+    ? rutinas.filter(r => String(r['Fecha Asignacion']||r['fecha asignacion']||'').trim() === fechaMax)
+    : rutinas;
+
   // Agrupar por día
   const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const porDia = {};
-  rutinas.forEach(r => {
+  rutinasFiltradas.forEach(r => {
     const dia = String(r['Dia']||r['dia']||'').trim();
     if (!porDia[dia]) porDia[dia] = [];
     porDia[dia].push(r);
