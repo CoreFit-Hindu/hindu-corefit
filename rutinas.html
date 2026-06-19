@@ -654,15 +654,21 @@ async function guardarRutina() {
   mostrarToast('Guardando rutina…');
 
   try {
-    const params = new URLSearchParams({
-      action: 'guardar',
-      data: JSON.stringify(filas),
+    const resp = await fetch(API_RUTINAS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'guardar', filas: filas }),
     });
-    fetch(API_RUTINAS + '?' + params.toString()).catch(e => console.warn(e));
-    mostrarToast('✓ Rutina guardada correctamente');
+    const result = await resp.json().catch(()=>({ok:false}));
+    if (result.ok) {
+      mostrarToast('✓ Rutina guardada correctamente (' + filas.length + ' ejercicios)');
+    } else {
+      mostrarToast('⚠ Guardado con posibles errores, verificá la planilla', true);
+    }
     renderDias();
   } catch(e) {
-    mostrarToast('Error al guardar', true);
+    console.error(e);
+    mostrarToast('Error al guardar: ' + e.message, true);
   }
 }
 
