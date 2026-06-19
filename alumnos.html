@@ -441,7 +441,7 @@ main {
     <button class="nav-tab" onclick="window.location.href='instructores.html'">Instructores</button>
     <button class="nav-tab active">Alumnos</button>
     <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
-    <button class="nav-tab" onclick="alert('Próximamente: Rutinas')">Rutinas</button>
+    <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
   </div>
 
   <div class="nav-right">
@@ -559,7 +559,7 @@ function getTel(r)      { return String(r['Telefono'] || r['Teléfono'] || '').t
 function getDomicilio(r){ return String(r['Domicilio'] || '').trim(); }
 function getFecha(r)    { return String(r['Fecha de nacimiento'] || '').trim(); }
 function getHistorial(r){ return String(r['Historial de actividad física'] || r['Historial de actividad fisica'] || '').trim(); }
-function getHorario(r)  { return String(r['Horario asignado'] || '').trim(); }
+function getHorario(r)  { return String(r['Horario Asignado'] || r['Horario asignado'] || '').trim(); }
 function getActividad(r){ return String(r['Actividad'] || '').trim(); }
 function getFoto(r)     { return String(r['Subir una foto'] || r['Sbir una foto'] || '').trim(); }
 
@@ -586,7 +586,14 @@ function actClass(a) {
 
 function calcEdad(fecha) {
   if (!fecha) return '';
-  const d = new Date(fecha);
+  let d;
+  const partes = String(fecha).trim().split('/');
+  if (partes.length === 3) {
+    // Formato dd/mm/yyyy
+    d = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
+  } else {
+    d = new Date(fecha);
+  }
   if (isNaN(d)) return '';
   const hoy = new Date();
   let edad = hoy.getFullYear() - d.getFullYear();
