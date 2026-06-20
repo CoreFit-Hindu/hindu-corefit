@@ -558,7 +558,7 @@ function getDNI(r)      { return String(r['DNI'] || '').trim(); }
 function getTel(r)      { return String(r['Telefono'] || r['Teléfono'] || '').trim(); }
 function getDomicilio(r){ return String(r['Domicilio'] || '').trim(); }
 function getFecha(r)    { return String(r['Fecha de nacimiento'] || '').trim(); }
-function getHistorial(r){ return String(r['Historial de actividad física'] || r['Historial de actividad fisica'] || '').trim(); }
+function getHistorial(r){ return String(r['Htorial de Actividad Fisica'] || r['Historial de actividad física'] || r['Historial de actividad fisica'] || '').trim(); }
 function getHorario(r)  { return String(r['Horario Asignado'] || r['Horario asignado'] || '').trim(); }
 function getActividad(r){ return String(r['Actividad'] || '').trim(); }
 function getFoto(r)     { return String(r['Subir una foto'] || r['Sbir una foto'] || '').trim(); }
