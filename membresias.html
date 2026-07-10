@@ -146,6 +146,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
     <button class="nav-tab active">Membresías</button>
     <button class="nav-tab" onclick="location.href='asistencia.html'">Asistencia</button>
     <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
+    <button class="nav-tab" onclick="location.href='gerencia.html'">Gerencia</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
     <button class="btn-sync" id="btnSync" onclick="cargarDatos(true)">
@@ -454,6 +455,8 @@ function filtrar() {
 }
 
 function renderTabla(lista) {
+  let esGerencia = false;
+  try { esGerencia = JSON.parse(sessionStorage.getItem('hcf_user')||'{}').especialidad?.toLowerCase().includes('gerencia') || false; } catch(e){}
   const tbody = document.getElementById('tablaBody');
   if (!lista.length) {
     tbody.innerHTML = '<tr><td colspan="8"><div class="state-msg">No se encontraron pagos.</div></td></tr>';
@@ -479,8 +482,11 @@ function renderTabla(lista) {
       <td>${fecha}</td>
       <td><span class="badge-estado ${estadoClass(estado)}"><span class="badge-dot"></span>${estado}</span></td>
       <td>
-        ${esPend ? `<button class="btn-accion" onclick="validarPago(${i}, 'Validado')">✓ Validar</button>
-        <button class="btn-accion rechazar" onclick="validarPago(${i}, 'Rechazado')">✗ Rechazar</button>` : '—'}
+        ${esPend ? (esGerencia ?
+          `<button class="btn-accion" onclick="validarPago(${i}, 'Validado')">✓ Validar</button>
+          <button class="btn-accion rechazar" onclick="validarPago(${i}, 'Rechazado')">✗ Rechazar</button>`
+          : `<span style="font-size:0.75rem;color:var(--amber)">⏳ Pendiente validación</span>`)
+          : '—'}
       </td>
     </tr>`;
   }).join('');
