@@ -140,10 +140,10 @@ tbody td.nombre{color:var(--text);font-weight:600;}
     </svg>
     HINDÚ <span style="color:var(--text2);font-weight:500;margin:0 4px">—</span> CoreFit
   </div>
-    <div class="nav-tabs">
+      <div class="nav-tabs">
     <button class="nav-tab" onclick="location.href='instructores.html'">Instructores</button>
     <button class="nav-tab" onclick="location.href='alumnos.html'">Alumnos</button>
-    <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
+    <button class="nav-tab active" onclick="location.href='membresias.html'">Membresías</button>
     <button class="nav-tab" onclick="location.href='asistencia.html'">Asistencia</button>
     <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
     <button class="nav-tab" onclick="location.href='gerencia.html'">Gerencia</button>
@@ -672,23 +672,5 @@ function mostrarToast(msg, isError=false) {
 cargarDatos();
 </script>
 
-<script>
-// Marcar pestaña activa según la página actual
-(function() {
-  const page = window.location.pathname.split('/').pop() || 'index.html';
-  const map = {
-    'instructores.html': 'Instructores',
-    'alumnos.html': 'Alumnos',
-    'membresias.html': 'Membresías',
-    'asistencia.html': 'Asistencia',
-    'rutinas.html': 'Rutinas',
-    'gerencia.html': 'Gerencia',
-  };
-  const activo = map[page];
-  document.querySelectorAll('.nav-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.trim() === activo);
-  });
-})();
-</script>
 </body>
 </html>
