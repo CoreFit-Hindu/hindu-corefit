@@ -106,13 +106,13 @@ tbody td.nombre{color:var(--text);font-weight:600;}
     </svg>
     HINDÚ <span style="color:var(--text2);font-weight:500;margin:0 4px">—</span> CoreFit
   </div>
-    <div class="nav-tabs">
+      <div class="nav-tabs">
     <button class="nav-tab" onclick="location.href='instructores.html'">Instructores</button>
     <button class="nav-tab" onclick="location.href='alumnos.html'">Alumnos</button>
     <button class="nav-tab" onclick="location.href='membresias.html'">Membresías</button>
     <button class="nav-tab" onclick="location.href='asistencia.html'">Asistencia</button>
     <button class="nav-tab" onclick="location.href='rutinas.html'">Rutinas</button>
-    <button class="nav-tab" onclick="location.href='gerencia.html'">Gerencia</button>
+    <button class="nav-tab active" onclick="location.href='gerencia.html'">Gerencia</button>
   </div>
   <button class="btn-sync" id="btnSync" onclick="cargarDatos(true)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -425,23 +425,5 @@ if (!user.dni || !String(user.especialidad||'').toLowerCase().includes('gerencia
 cargarDatos();
 </script>
 
-<script>
-// Marcar pestaña activa según la página actual
-(function() {
-  const page = window.location.pathname.split('/').pop() || 'index.html';
-  const map = {
-    'instructores.html': 'Instructores',
-    'alumnos.html': 'Alumnos',
-    'membresias.html': 'Membresías',
-    'asistencia.html': 'Asistencia',
-    'rutinas.html': 'Rutinas',
-    'gerencia.html': 'Gerencia',
-  };
-  const activo = map[page];
-  document.querySelectorAll('.nav-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.trim() === activo);
-  });
-})();
-</script>
 </body>
 </html>
