@@ -2,6 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3a9e3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CoreFit">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hindú — CoreFit</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -634,7 +640,8 @@
         }));
         btn.classList.remove('loading');
         showToast('✓ Bienvenido, ' + (instructor['Nombre y Apellido']||'').split(' ')[0]);
-        setTimeout(() => { window.location.href = 'instructores.html'; }, 1000);
+        const esGerencia = String(instructor['Especialidada/Diciplina']||'').toLowerCase().includes('gerencia');
+        setTimeout(() => { window.location.href = esGerencia ? 'gerencia.html' : 'instructores.html'; }, 1000);
         return;
       }
 
@@ -720,6 +727,13 @@
     clearTimeout(t._timer);
     t._timer = setTimeout(() => t.classList.remove('show'), 3500);
   }
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(() => {
+    console.log('SW registrado');
+  }).catch(e => console.log('SW error:', e));
+}
 </script>
 </body>
 </html>
