@@ -563,7 +563,7 @@ function getFecha(r)    { return String(r['Fecha de nacimiento'] || '').trim(); 
 function getHistorial(r){ return String(r['Htorial de Actividad Fisica'] || r['Historial de actividad física'] || r['Historial de actividad fisica'] || '').trim(); }
 function getHorario(r)  { return String(r['Horario Asignado'] || r['Horario asignado'] || '').trim(); }
 function getActividad(r){ return String(r['Actividad'] || '').trim(); }
-function getFoto(r)     { return String(r['Subir una foto'] || r['Sbir una foto'] || '').trim(); }
+function getFoto(r)     { return String(r['Subir una Foto'] || r['Subir una foto'] || r['Sbir una foto'] || '').trim(); }
 
 function fotoUrl(url) {
   if (!url) return '';
