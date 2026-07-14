@@ -304,6 +304,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
         <div id="comp-preview" style="margin-top:8px;display:none">
           <img id="comp-img" style="max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--border);">
           <p id="comp-nombre" style="font-size:0.78rem;color:var(--text3);margin-top:4px;"></p>
+          <p id="comp-status" style="font-size:0.78rem;color:var(--green-light);margin-top:2px;"></p>
         </div>
       </div>
       <div id="aviso-efectivo" style="font-size:0.82rem;color:#81c784;background:rgba(58,158,63,0.1);border:1px solid rgba(58,158,63,0.2);border-radius:8px;padding:8px 12px;display:block">
@@ -320,7 +321,8 @@ tbody td.nombre{color:var(--text);font-weight:600;}
 <script>
 const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
-const APPS_SCRIPT_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/membresias';
+const APPS_SCRIPT_URL      = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/membresias';
+const COMPROBANTES_URL     = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/comprobantes';
 
 let todos = [];
 let alumnos = [];
@@ -592,13 +594,43 @@ async function guardarPago() {
   const forma  = document.getElementById('f-forma').value;
   const fecha  = document.getElementById('f-fecha').value;
   const compFile = document.getElementById('f-comprobante-file');
-  const comprobante = compFile && compFile.files[0] ? compFile.files[0].name : '';
 
   if (!dni || !tipo || !monto || !fecha) {
     mostrarToast('Completá DNI, tipo, monto y fecha', true); return;
   }
-  if (forma === 'Transferencia' && !comprobante) {
+  if (forma === 'Transferencia' && (!compFile || !compFile.files[0])) {
     mostrarToast('Adjuntá el comprobante de pago', true); return;
+  }
+
+  // Subir comprobante a Drive si es transferencia
+  let comprobante = '';
+  if (forma === 'Transferencia' && compFile && compFile.files[0]) {
+    mostrarToast('Subiendo comprobante…');
+    const file = compFile.files[0];
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      const resp = await fetch(COMPROBANTES_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({ archivo: base64, nombre: file.name, tipo: file.type }),
+      });
+      const result = await resp.json();
+      if (result.ok) {
+        comprobante = result.url;
+        document.getElementById('comp-status').textContent = '✓ Comprobante subido correctamente';
+      } else {
+        mostrarToast('Error al subir comprobante: ' + (result.error||''), true);
+        return;
+      }
+    } catch(e) {
+      mostrarToast('Error al subir comprobante: ' + e.message, true);
+      return;
+    }
   }
 
   const estado = forma === 'Efectivo' ? 'Validado' : 'Pendiente';
