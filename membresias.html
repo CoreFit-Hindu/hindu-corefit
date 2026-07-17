@@ -321,8 +321,7 @@ tbody td.nombre{color:var(--text);font-weight:600;}
 <script>
 const WORKER_MEMBRESIAS = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/membresias';
 const WORKER_ALUMNOS    = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/alumnos';
-const APPS_SCRIPT_URL      = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/membresias';
-const COMPROBANTES_URL     = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/comprobantes';
+const APPS_SCRIPT_URL = 'https://hindu-corefit-proxy.edu-gonza.workers.dev/api/membresias';
 
 let todos = [];
 let alumnos = [];
@@ -473,6 +472,7 @@ function renderTabla(lista) {
     const fecha   = getVal(r,'Fecha de Pago') || '—';
     const estado  = getVal(r,'Estado') || 'Pendiente';
     const comp    = getVal(r,'Comprobante');
+    const compIdx = i;
     const esPend  = estado.toLowerCase() === 'pendiente';
 
     return `<tr>
@@ -480,7 +480,7 @@ function renderTabla(lista) {
       <td>${dni}</td>
       <td><span class="tipo-pill">${tipo}</span></td>
       <td><span class="monto-val">$${parseFloat(monto).toLocaleString('es-AR')}</span></td>
-      <td>${forma}${comp ? ' <a href="'+comp+'" target="_blank" style="color:var(--green-light);font-size:0.75rem">📎 ver</a>' : ''}</td>
+      <td>${forma}${comp ? ' <button onclick="verComp('+i+')" style="background:none;border:none;color:var(--green-light);font-size:0.75rem;cursor:pointer;text-decoration:underline;">📎 ver</button>' : ''}</td>
       <td>${fecha}</td>
       <td><span class="badge-estado ${estadoClass(estado)}"><span class="badge-dot"></span>${estado}</span></td>
       <td>
@@ -602,33 +602,21 @@ async function guardarPago() {
     mostrarToast('Adjuntá el comprobante de pago', true); return;
   }
 
-  // Subir comprobante a Drive si es transferencia
+  // Convertir comprobante a base64 para guardarlo en la Sheet
   let comprobante = '';
   if (forma === 'Transferencia' && compFile && compFile.files[0]) {
-    mostrarToast('Subiendo comprobante…');
+    mostrarToast('Procesando comprobante…');
     const file = compFile.files[0];
     try {
-      const base64 = await new Promise((res, rej) => {
+      comprobante = await new Promise((res, rej) => {
         const reader = new FileReader();
-        reader.onload = e => res(e.target.result.split(',')[1]);
+        reader.onload = e => res(e.target.result); // guarda data:image/...;base64,...
         reader.onerror = rej;
         reader.readAsDataURL(file);
       });
-      const resp = await fetch(COMPROBANTES_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'text/plain'},
-        body: JSON.stringify({ archivo: base64, nombre: file.name, tipo: file.type }),
-      });
-      const result = await resp.json();
-      if (result.ok) {
-        comprobante = result.url;
-        document.getElementById('comp-status').textContent = '✓ Comprobante subido correctamente';
-      } else {
-        mostrarToast('Error al subir comprobante: ' + (result.error||''), true);
-        return;
-      }
+      document.getElementById('comp-status').textContent = '✓ Comprobante listo';
     } catch(e) {
-      mostrarToast('Error al subir comprobante: ' + e.message, true);
+      mostrarToast('Error al procesar comprobante: ' + e.message, true);
       return;
     }
   }
@@ -653,19 +641,17 @@ async function guardarPago() {
   mostrarToast('Guardando pago…');
 
   try {
-    const params = new URLSearchParams({
-      action: 'nuevo',
-      dni: dni,
-      nombre: nombre,
-      tipo: tipo,
-      monto: monto,
-      forma: forma,
-      comprobante: comprobante,
-      estado: estado,
-      instructor: dniInstructor,
-      fecha: fecha,
-    });
-    fetch(APPS_SCRIPT_URL + '?' + params.toString()).catch(e => console.warn('Error al guardar:', e));
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({
+        action: 'nuevo',
+        dni, nombre, tipo, monto, forma,
+        comprobante, estado,
+        instructor: dniInstructor,
+        fecha,
+      }),
+    }).catch(e => console.warn('Error al guardar:', e));
   } catch(e) {
     console.warn('Error al guardar:', e);
   }
@@ -704,5 +690,36 @@ function mostrarToast(msg, isError=false) {
 cargarDatos();
 </script>
 
+<!-- Modal comprobante -->
+<div id="modalComp" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;padding:1.5rem;" onclick="cerrarComp()">
+  <div style="position:relative;max-width:90vw;max-height:90vh;" onclick="event.stopPropagation()">
+    <button onclick="cerrarComp()" style="position:absolute;top:-36px;right:0;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">✕</button>
+    <img id="compImg" style="max-width:85vw;max-height:85vh;border-radius:8px;object-fit:contain;" src="">
+    <div id="compPdf" style="display:none;color:#fff;text-align:center;padding:2rem;">
+      <a id="compLink" href="" download="comprobante.pdf" style="background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">⬇ Descargar PDF</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function verComp(idx) {
+  const comp = todos[idx] ? (todos[idx]['Comprobante']||todos[idx]['comprobante']||'') : '';
+  if (!comp) return;
+  const modal = document.getElementById('modalComp');
+  const img   = document.getElementById('compImg');
+  const pdf   = document.getElementById('compPdf');
+  if (comp.startsWith('data:image') || comp.startsWith('http')) {
+    img.src = comp; img.style.display='block'; pdf.style.display='none';
+  } else {
+    img.style.display='none'; pdf.style.display='block';
+    document.getElementById('compLink').href = comp;
+  }
+  modal.style.display = 'flex';
+}
+function cerrarComp() {
+  document.getElementById('modalComp').style.display = 'none';
+  document.getElementById('compImg').src = '';
+}
+</script>
 </body>
 </html>
