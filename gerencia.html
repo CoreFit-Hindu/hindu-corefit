@@ -288,7 +288,7 @@ function renderTransferencias() {
       <td>${dni}</td>
       <td>${tipo}</td>
       <td><span class="monto-val">$${monto.toLocaleString('es-AR')}</span></td>
-      <td>${comp ? `<a href="${comp}" target="_blank" style="color:var(--green-light);font-size:0.8rem">📎 Ver</a>` : '—'}</td>
+      <td>${comp ? `<button onclick="verComprobante('${idxReal}')" style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.3);border-radius:6px;color:#81c784;font-size:0.75rem;padding:4px 10px;cursor:pointer;">📎 Ver</button>` : '—'}</td>
       <td>${fecha}</td>
       <td>${instNombre}</td>
       <td>
@@ -425,5 +425,47 @@ if (!user.dni || !String(user.especialidad||'').toLowerCase().includes('gerencia
 cargarDatos();
 </script>
 
+<!-- Modal comprobante -->
+<div id="modalComp" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;padding:1.5rem;" onclick="cerrarComp()">
+  <div style="position:relative;max-width:90vw;max-height:90vh;" onclick="event.stopPropagation()">
+    <button onclick="cerrarComp()" style="position:absolute;top:-36px;right:0;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">✕</button>
+    <img id="compImg" style="max-width:85vw;max-height:85vh;border-radius:8px;object-fit:contain;" src="">
+    <div id="compPdf" style="display:none;color:#fff;text-align:center;padding:2rem;">
+      <p style="margin-bottom:1rem">Este comprobante es un PDF.</p>
+      <a id="compLink" href="" download="comprobante.pdf" style="background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">⬇ Descargar PDF</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function verComprobante(idx) {
+  const comp = pagos[parseInt(idx)]['Comprobante'] || pagos[parseInt(idx)]['comprobante'] || '';
+  if (!comp) return;
+  const modal = document.getElementById('modalComp');
+  const img   = document.getElementById('compImg');
+  const pdf   = document.getElementById('compPdf');
+  const link  = document.getElementById('compLink');
+  
+  if (comp.includes('data:image') || comp.includes('drive.google') || comp.startsWith('http')) {
+    img.src = comp;
+    img.style.display = 'block';
+    pdf.style.display = 'none';
+  } else if (comp.includes('data:application/pdf') || comp.includes('.pdf')) {
+    img.style.display = 'none';
+    pdf.style.display = 'block';
+    link.href = comp;
+  } else {
+    img.src = comp;
+    img.style.display = 'block';
+    pdf.style.display = 'none';
+  }
+  modal.style.display = 'flex';
+}
+
+function cerrarComp() {
+  document.getElementById('modalComp').style.display = 'none';
+  document.getElementById('compImg').src = '';
+}
+</script>
 </body>
 </html>
